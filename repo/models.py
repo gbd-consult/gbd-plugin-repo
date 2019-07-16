@@ -10,7 +10,6 @@ class Plugin(db.Model):
     qgis_max_version = db.Column(db.String(10), nullable=False)
     md5_sum = db.Column(db.String(32), nullable=False)
     file_name = db.Column(db.String(120), nullable=False)
-    download_url = db.Column(db.String(120), nullable=False)
 
     def __repr__(self):
         return 'Plugin: %s, version %s, download: %s' % (self.name, self.version, self.download_url)
