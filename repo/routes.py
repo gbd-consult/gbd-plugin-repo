@@ -8,6 +8,7 @@ from lxml import etree
 
 @app.route('/plugin-release', methods = ['POST'])
 def pluginRelease():
+    """ Webhook to upload plugins triggered on release. """
     if request.method == 'POST':
         data = request.json
         if data['action'] in ['created','published','edited']:
@@ -20,7 +21,7 @@ def pluginRelease():
                     zip_file = os.path.join(app.config['PLUGIN_PATH'], asset['name'])
                     open(zip_file, 'wb').write(response.content)
                     try:
-                        p = extractPluginMetadata(zip_file, 'http:/fno.rd/')
+                        p = extractPluginMetadata(zip_file)
                     except:
                         abort(400)
                     if p.version == release_data['tag_name']:
@@ -34,9 +35,10 @@ def pluginRelease():
         abort(405)
 
 
-@app.route('/plugins.xml', methods = ['GET'])
+@app.route('/plugins.xml')
+@app.route('/')
 def getPlugins():
-    """ Generates the 'plugins.xml' from the DB. """
+    """ Generates the 'plugins.xml' and html view from the DB. """
     if request.args.get('qgis'):
         version = request.args.get('qgis')
         plugins = Plugin.query.filter(Plugin.qgis_min_version <= version, Plugin.qgis_max_version >= version).all()
@@ -44,6 +46,7 @@ def getPlugins():
         plugins = Plugin.query.all()
 
     pluginRoot = etree.Element('plugins')
+
     for p in plugins:
         pluginElement = etree.Element('pyqgis_plugin', version = p.version, name = p.name)
 
@@ -65,4 +68,10 @@ def getPlugins():
         md5_sum.text = p.md5_sum
 
         pluginRoot.append(pluginElement)
-    return Response(etree.tostring(pluginRoot), mimetype='text/xml')
+
+    if request.path.endswith('plugins.xml'):
+        return Response(etree.tostring(pluginRoot), mimetype='text/xml')
+    else:
+        transform = etree.XSLT(etree.parse(os.path.join(os.path.dirname(__file__), app.config['STYLE_FILE'])))
+        html = transform(etree.ElementTree(pluginRoot))
+        return Response(etree.tostring(html), mimetype='text/html')

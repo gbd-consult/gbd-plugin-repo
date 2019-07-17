@@ -24,7 +24,7 @@ def md5(filename):
     return hash_md5.hexdigest()
 
 
-def extractPluginMetadata(filename, download_root):
+def extractPluginMetadata(filename):
     """ Extracts the metadata of a plugin from a zip file.
     Args:
         filename (String): path of the zip file.
@@ -46,7 +46,6 @@ def extractPluginMetadata(filename, download_root):
             qgis_max_version = config.get('general', 'qgisMaximumVersion'),
             author_name = config.get('general', 'author'),
             file_name = os.path.basename(filename),
-            download_url = os.path.join(download_root, os.path.basename(filename)),
             md5_sum = md5(filename))
         return plugin
     else:
