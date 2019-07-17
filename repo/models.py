@@ -12,4 +12,4 @@ class Plugin(db.Model):
     file_name = db.Column(db.String(120), nullable=False)
 
     def __repr__(self):
-        return 'Plugin: %s, version %s, download: %s' % (self.name, self.version, self.download_url)
+        return 'Plugin: %s, version %s, zip_file: %s' % (self.name, self.version, self.file_name)

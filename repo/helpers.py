@@ -28,7 +28,6 @@ def extractPluginMetadata(filename):
     """ Extracts the metadata of a plugin from a zip file.
     Args:
         filename (String): path of the zip file.
-        download_root (String): root url to where the zip files can be downloaded from.
     """
     zf = ZipFile(filename)
     metadataFiles = list(filter(lambda x: x.endswith('/metadata.txt'), zf.namelist()))
