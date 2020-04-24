@@ -1,4 +1,5 @@
 from repo import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Plugin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -13,3 +14,16 @@ class Plugin(db.Model):
 
     def __repr__(self):
         return 'Plugin: %s, version %s, zip_file: %s' % (self.name, self.version, self.file_name)
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    password_hash = db.Column(db.String(120))
+    superuser = db.Column(db.Boolean, nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)

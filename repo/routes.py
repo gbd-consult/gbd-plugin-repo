@@ -1,38 +1,121 @@
 import os
-import requests as r
-from repo import app, db
-from flask import request, abort, Response
-from repo.helpers import extractPluginMetadata
+from repo import app, db, auth
+from flask import request, Response, render_template, redirect, flash
+from repo.helpers import readline_generator, md5, newerVersion
 from repo.models import Plugin
 from lxml import etree
+from zipfile import ZipFile
+from configparser import ConfigParser
+from tempfile import TemporaryDirectory
+import shutil
 
-@app.route('/plugin-release', methods = ['POST'])
-def pluginRelease():
-    """ Webhook to upload plugins triggered on release. """
+@app.route('/upload', methods=['GET','POST'])
+@auth.login_required
+def uploadPlugin():
+    """ Upload a zip compressed QGIS plugin """
     if request.method == 'POST':
-        data = request.json
-        if data['action'] in ['created','published','edited']:
-            release_data = data['release']
-            if len(release_data['assets']) > 0:
-                assets = [a for a in release_data['assets'] if a['content_type'] == 'application/zip']
-                asset = assets.pop()
-                if asset:
-                    response = r.get(asset['browser_download_url'], allow_redirects=True)
-                    zip_file = os.path.join(app.config['PLUGIN_PATH'], asset['name'])
-                    open(zip_file, 'wb').write(response.content)
-                    try:
-                        p = extractPluginMetadata(zip_file)
-                    except:
-                        abort(400)
-                    if p.version == release_data['tag_name']:
-                        db.session.add(p)
-                        db.session.commit()
-                        return 'downloaded new plugin release'
-                    else:
-                        os.remove(zip_file)
-        abort(400)
+        # Check if there is a file part
+        if 'file' not in request.files:
+            flash('no file part')
+            return redirect(request.url)
+        file = request.files['file']
+
+        # check if the filename is emtpy
+        if file.filename == '':
+            flash('no selected file')
+            return redirect(request.url)
+
+        # Check filetype
+        if not file.filename.endswith('.zip'):
+            flash('wrong filetype')
+            return(redirect(request.url))
+
+        # Create a temp file for our zip
+        with TemporaryDirectory() as dir:
+            tmp_path = os.path.join(dir, file.filename)
+            file.save(tmp_path)
+            with open(tmp_path, 'rb') as f:
+                # Check if plugin is a duplicate
+                existing_plugin = Plugin.query.filter_by(md5_sum = md5(f)).first()
+                if existing_plugin:
+                    flash('uploaded plugin is a duplicate!')
+                    return(redirect(request.url))
+
+                # Check if we can open the zip file
+                try:
+                    zf = ZipFile(f)
+                except:
+                    flash("broken zip file")
+                    return(redirect(request.url))
+
+                # Check if the zip file contains a metadata.txt file
+                metadataFiles = list(filter(lambda x: x.endswith('/metadata.txt') or x == 'metadata.txt',
+                    zf.namelist()))
+                if not len(metadataFiles) == 1:
+                    flash("missing metadata.txt")
+                    return(redirect(request.url))
+
+                # Try to read metadata.txt
+                try:
+                    metadata = zf.open(metadataFiles.pop())
+                    config = ConfigParser()
+                    config.read_file(readline_generator(metadata))
+
+                    name = config.get('general', 'name')
+                    version = config.get('general', 'version')
+                    description = config.get('general', 'description')
+                    qgis_min_version = config.get('general', 'qgisMinimumVersion')
+                    qgis_max_version = config.get('general', 'qgisMaximumVersion')
+                    author_name = config.get('general', 'author')
+
+                except:
+                    flash("invalid metadata.txt file")
+                    return(redirect(request.url))
+
+                # Check if there already is a plugin with that name
+                old_plugin = Plugin.query.filter_by(file_name = file.filename).first()
+                if old_plugin and not newerVersion((version, old_plugin.version)):
+                    flash('rejecting upload. uploaded version of %s is older than existing one' % name)
+                    return(redirect(request.url))
+
+                try:
+                plugin_path = os.path.join(app.config['PLUGIN_PATH'], file.filename)
+                shutil.move(tmp_path, plugin_path)
+                except:
+                    flash("copying of new plugin failed")
+                    return(redirect(request.url))
+
+
+                if old_plugin:
+                    old_plugin.name = name
+                    old_plugin.version = version
+                    old_plugin.description = config.get('general', 'description')
+                    old_plugin.qgis_min_version= config.get('general', 'qgisMinimumVersion')
+                    old_plugin.qgis_max_version= config.get('general', 'qgisMaximumVersion')
+                    old_plugin.author_name = config.get('general', 'author')
+                    old_plugin.md5_sum = md5(f)
+
+                    db.session.add(old_plugin)
+                    db.session.commit()
+                else:
+                    plugin = Plugin(
+                        name = name,
+                        version = version,
+                        description = config.get('general', 'description'),
+                        qgis_min_version = config.get('general', 'qgisMinimumVersion'),
+                        qgis_max_version = config.get('general', 'qgisMaximumVersion'),
+                        author_name = config.get('general', 'author'),
+                        file_name = file.filename,
+                        md5_sum = md5(f))
+
+                    db.session.add(plugin)
+                    db.session.commit()
+
+        flash('successfuly uploaded %s' % str(plugin))
+        return(redirect(request.url))
     else:
-        abort(405)
+        return(render_template("upload.html", user = auth.username()))
+
 
 
 @app.route('/plugins.xml')
@@ -72,6 +155,4 @@ def getPlugins():
     if request.path.endswith('plugins.xml'):
         return Response(etree.tostring(pluginRoot), mimetype='text/xml')
     else:
-        transform = etree.XSLT(etree.parse(os.path.join(os.path.dirname(__file__), app.config['STYLE_FILE'])))
-        html = transform(etree.ElementTree(pluginRoot))
-        return Response(etree.tostring(html), mimetype='text/html')
+        return render_template("plugins.html", plugins = plugins)

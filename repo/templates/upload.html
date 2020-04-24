@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+        <form method="post" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="exampleInputEmail1">Plugin</label>
+            <input type="file" name="file" class="form-control" aria-describedby="uploadHelp">
+            <small id="uploadHelp" class="form-text text-muted">Plugin zum hochladen auswählen</small>
+          </div>
+          <button type="submit" class="btn btn-primary">Hochladen</button>
+        </form>
+    </div>
+{% endblock %}

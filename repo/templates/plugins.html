@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if plugins %}
+    {% for plugin in plugins %}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">{{ plugin.name }}</h5>
+          <p class="card-text">Version: {{ plugin.version }}</p>
+          <p class="card-text">{{ plugin.description }}</p>
+          <a href="{{ config['PLUGIN_ROOT'] }}/{{ plugin.file_name }}" class="btn btn-primary">Download</a>
+
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endblock %}
