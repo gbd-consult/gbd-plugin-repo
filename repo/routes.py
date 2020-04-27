@@ -74,13 +74,13 @@ def uploadPlugin():
 
                 # Check if there already is a plugin with that name
                 old_plugin = Plugin.query.filter_by(file_name = file.filename).first()
-                if old_plugin and not newerVersion((version, old_plugin.version)):
+                if old_plugin and not newerVersion(version, old_plugin.version):
                     flash('rejecting upload. uploaded version of %s is older than existing one' % name)
                     return(redirect(request.url))
 
                 try:
-                plugin_path = os.path.join(app.config['PLUGIN_PATH'], file.filename)
-                shutil.move(tmp_path, plugin_path)
+                    plugin_path = os.path.join(app.config['PLUGIN_PATH'], file.filename)
+                    shutil.move(tmp_path, plugin_path)
                 except:
                     flash("copying of new plugin failed")
                     return(redirect(request.url))
@@ -97,6 +97,7 @@ def uploadPlugin():
 
                     db.session.add(old_plugin)
                     db.session.commit()
+                    flash('successfuly updated %s to Version %s' % (old_plugin.name,version))
                 else:
                     plugin = Plugin(
                         name = name,
@@ -110,8 +111,8 @@ def uploadPlugin():
 
                     db.session.add(plugin)
                     db.session.commit()
+                    flash('successfuly uploaded %s' % plugin.name)
 
-        flash('successfuly uploaded %s' % str(plugin))
         return(redirect(request.url))
     else:
         return(render_template("upload.html", user = auth.username()))
