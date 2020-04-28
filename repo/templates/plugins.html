@@ -7,7 +7,19 @@
           <h5 class="card-title">{{ plugin.name }}</h5>
           <p class="card-text">Version: {{ plugin.version }}</p>
           <p class="card-text">{{ plugin.description }}</p>
-          <a href="{{ config['PLUGIN_ROOT'] }}/{{ plugin.file_name }}" class="btn btn-primary">Download</a>
+          {% if plugin.about %}
+            <p class="card-text">{{ plugin.about }}</p>
+          {% endif %}
+          <a href="{{ config['PLUGIN_ROOT'] }}/{{ plugin.file_name }}" class="btn btn-primary">
+            <i class="fas fa-download"></i>
+            Download
+          </a>
+          {% if plugin.repository %}
+            <a href="{{ plugin.repository}}" class="btn btn-primary">
+              <i class="fab fa-github-alt"></i>
+              Repository
+            </a>
+          {% endif %}
 
         </div>
       </div>

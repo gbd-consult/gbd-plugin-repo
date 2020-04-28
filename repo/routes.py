@@ -67,6 +67,8 @@ def uploadPlugin():
                     qgis_min_version = config.get('general', 'qgisMinimumVersion')
                     qgis_max_version = config.get('general', 'qgisMaximumVersion')
                     author_name = config.get('general', 'author')
+                    repository = config.get('general', 'repository', fallback = '')
+                    about = config.get('general', 'about', fallback = '')
 
                 except:
                     flash("invalid metadata.txt file")
@@ -87,31 +89,28 @@ def uploadPlugin():
 
 
                 if old_plugin:
-                    old_plugin.name = name
-                    old_plugin.version = version
-                    old_plugin.description = config.get('general', 'description')
-                    old_plugin.qgis_min_version= config.get('general', 'qgisMinimumVersion')
-                    old_plugin.qgis_max_version= config.get('general', 'qgisMaximumVersion')
-                    old_plugin.author_name = config.get('general', 'author')
-                    old_plugin.md5_sum = md5(f)
-
-                    db.session.add(old_plugin)
-                    db.session.commit()
-                    flash('successfuly updated %s to Version %s' % (old_plugin.name,version))
+                    plugin = old_plugin
+                    msg = 'successfuly updated %s to Version %s' % (name,version)
                 else:
-                    plugin = Plugin(
-                        name = name,
-                        version = version,
-                        description = config.get('general', 'description'),
-                        qgis_min_version = config.get('general', 'qgisMinimumVersion'),
-                        qgis_max_version = config.get('general', 'qgisMaximumVersion'),
-                        author_name = config.get('general', 'author'),
-                        file_name = file.filename,
-                        md5_sum = md5(f))
+                    plugin = Plugin()
+                    msg = 'successfuly uploaded %s' % name
 
-                    db.session.add(plugin)
-                    db.session.commit()
-                    flash('successfuly uploaded %s' % plugin.name)
+
+                plugin.name = name
+                plugin.version = version
+                plugin.description = description
+                plugin.qgis_min_version= qgis_min_version
+                plugin.qgis_max_version= qgis_max_version
+                plugin.author_name = author_name
+                plugin.md5_sum = md5(f)
+                plugin.file_name = file.filename
+                # optional
+                plugin.repository = repository
+                plugin.about = about
+
+                db.session.add(plugin)
+                db.session.commit()
+                flash(msg)
 
         return(redirect(request.url))
     else:
