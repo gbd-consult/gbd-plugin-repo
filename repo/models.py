@@ -1,4 +1,5 @@
 from repo import db
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class Plugin(db.Model):
@@ -13,6 +14,9 @@ class Plugin(db.Model):
     file_name = db.Column(db.String(120), nullable=False)
     repository = db.Column(db.String(200))
     about = db.Column(db.String())
+    updated_at = db.Column(db.DateTime(),
+        default = datetime.utcnow,
+        onupdate = datetime.utcnow)
 
     def __repr__(self):
         return 'Plugin: %s, version %s, zip_file: %s' % (self.name, self.version, self.file_name)
