@@ -2,6 +2,7 @@ from repo.models import User
 from repo import login_manager, app, db
 from flask_login import current_user, login_user, logout_user, login_required
 from flask import redirect, url_for, request, flash, render_template, abort
+from werkzeug.urls import url_parse
 
 
 @login_manager.user_loader
@@ -18,8 +19,10 @@ def login():
             flash('Invalid username or password')
             return redirect(url_for('login'))
         login_user(user)
-        return redirect(url_for('getPlugins'))
-        # TODO: next and remember me
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != "":
+            next_page = url_for('getPlugins')
+        return redirect(next_page)
     else:
         return render_template('login.html')
 
