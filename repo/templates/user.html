@@ -9,23 +9,31 @@
             {% else %}
               <input type="text" name="username" class="form-control">
             {% endif %}
+          </div>
+          <div class="form-group">
             <label for="password">Passwort</label>
             <input type="password" name="password" class="form-control">
-            {% if user %}
-              <input type="checkbox" name="superuser" class="form-check-input"
-              checked="{{ user.superuser }}">
-            {% else %}
-              <input type="checkbox" name="superuser" class="form-check-input">
-            {% endif %}
-            <label class="form-check-label" for="superuser">Superuser</label>
           </div>
-          <button type="submit" class="btn btn-primary">
-            {% if user %}
-              Update
-            {% else %}
-              Create
-            {% endif %}
-          </button>
+          <div class="form group">
+            <div class="form-check">
+              {% if user %}
+                <input type="checkbox" name="superuser" class="form-check-input"
+                checked="{{ user.superuser }}">
+              {% else %}
+                <input type="checkbox" name="superuser" class="form-check-input">
+              {% endif %}
+              <label class="form-check-label" for="superuser">Superuser</label>
+            </div>
+          </div>
+          <div class="text-right">
+            <button type="submit" class="btn btn-primary">
+              {% if user %}
+                Update
+              {% else %}
+                Create
+              {% endif %}
+            </button>
+          </div>
         </form>
     </div>
 {% endblock %}

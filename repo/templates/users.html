@@ -3,6 +3,7 @@
   <div class="container" style="padding-bottom: 15px">
     <a href="{{url_for('add_user') }}">
       <button type="button" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i>
         add User
       </button>
     </a>
@@ -14,7 +15,7 @@
           <th scope="col">id</th>
           <th scope="col">Name</th>
           <th scope="col">Superuser</th>
-          <th scope="col">Edit</th>
+          <th scope="col"/>
         </tr>
       </thead>
       <tbody>
@@ -24,12 +25,20 @@
           <td>{{ user.name }}</td>
           <td>{{ user.superuser }}</td>
           <td>
-            <a href="{{ url_for('edit_user', user_id = user.id) }}">
-              edit
-            </a>
-            <a href="{{ url_for('delete_user', user_id = user.id) }}">
-              delete
-            </a>
+            <div class="text-right">
+              <div class="btn-group" role="group">
+                <a class = "btn btn-sm btn-info"
+                  href="{{ url_for('edit_user', user_id = user.id) }}">
+                  <i class="fas fa-user-edit"></i>
+                  edit
+                </a>
+                <a class = "btn btn-sm btn-danger"
+                  href="{{ url_for('delete_user', user_id = user.id) }}">
+                  <i class="fas fa-trash-alt"></i>
+                  delete
+                </a>
+              </div>
+            </div>
           </td>
         </tr>
       {% endfor %}

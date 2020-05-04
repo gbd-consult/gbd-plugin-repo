@@ -2,11 +2,29 @@
 {% block body %}
         <form method="post" enctype="multipart/form-data">
           <div class="form-group">
-            <label for="exampleInputEmail1">Plugin</label>
-            <input type="file" name="file" class="form-control" aria-describedby="uploadHelp">
-            <small id="uploadHelp" class="form-text text-muted">Plugin zum hochladen auswählen</small>
+            <p class="h4">
+              Plugin Upload
+            </p>
+              <div class="custom-file">
+                <input type="file" name="file"
+                class="custom-file-input" id="pluginFile">
+                <label class="custom-file-label" for="pluginFile">Datei wählen</label>
+              </div>
+            <small id="uploadHelp" class="form-text text-muted">Akzeptierte Dateiendungen: *.zip</small>
           </div>
-          <button type="submit" class="btn btn-primary">Hochladen</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-file-upload"></i>
+            Hochladen
+          </button>
         </form>
     </div>
+{% endblock %}
+{% block script %}
+<script>
+// Add the following code if you want the name of the file appear on select
+$(".custom-file-input").on("change", function() {
+  var fileName = $(this).val().split("\\").pop();
+  $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+});
+</script>
 {% endblock %}
