@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block body %}
+        <form method="post" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="username">Username</label>
+            {% if user %}
+              <input type="text" name="username" class="form-control"
+                placeholder="{{ user.name }}" readonly>
+            {% else %}
+              <input type="text" name="username" class="form-control">
+            {% endif %}
+            <label for="password">Passwort</label>
+            <input type="password" name="password" class="form-control">
+            {% if user %}
+              <input type="checkbox" name="superuser" class="form-check-input"
+              checked="{{ user.superuser }}">
+            {% else %}
+              <input type="checkbox" name="superuser" class="form-check-input">
+            {% endif %}
+            <label class="form-check-label" for="superuser">Superuser</label>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            {% if user %}
+              Update
+            {% else %}
+              Create
+            {% endif %}
+          </button>
+        </form>
+    </div>
+{% endblock %}

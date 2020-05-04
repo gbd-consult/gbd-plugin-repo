@@ -21,16 +21,30 @@
           <li class="nav-item ">
             <a class="nav-link" href="/">Plugins</a>
           </li>
-          {% if user %}
+          {% if current_user.is_authenticated %}
           <li class="nav-item">
             <a class="nav-link" href="/upload">Upload</a>
           </li>
           {% endif %}
+          {% if current_user.is_authenticated and current_user.superuser %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('get_users')}}">Users</a>
+          </li>
+          {% endif %}
         </ul>
-        {% if user %}
+        {% if current_user.is_authenticated %}
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {{ current_user.name }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+          <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+        </div>
         <span class="navbar-text">
-          {{ user }}
         </span>
+        {% else %}
+        <a class="nav.link" href="{{ url_for('login')}}">
+          Login
+        </a>
         {% endif %}
       </div>
     </nav>

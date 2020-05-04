@@ -1,6 +1,7 @@
 import os
-from repo import app, db, auth
+from repo import app, db
 from flask import request, Response, render_template, redirect, flash
+from flask_login import login_required, current_user
 from repo.helpers import readline_generator, md5, newerVersion
 from repo.models import Plugin
 from lxml import etree
@@ -10,7 +11,7 @@ from tempfile import TemporaryDirectory
 import shutil
 
 @app.route('/upload', methods=['GET','POST'])
-@auth.login_required
+@login_required
 def uploadPlugin():
     """ Upload a zip compressed QGIS plugin """
     if request.method == 'POST':
@@ -104,6 +105,7 @@ def uploadPlugin():
                 plugin.author_name = author_name
                 plugin.md5_sum = md5(f)
                 plugin.file_name = file.filename
+                plugin.user_id = current_user.id
                 # optional
                 plugin.repository = repository
                 plugin.about = about
@@ -114,8 +116,7 @@ def uploadPlugin():
 
         return(redirect(request.url))
     else:
-        return(render_template("upload.html", user = auth.username()))
-
+        return(render_template("upload.html"))
 
 
 @app.route('/plugins.xml')

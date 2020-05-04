@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block body %}
+  <div class="container" style="padding-bottom: 15px">
+    <a href="{{url_for('add_user') }}">
+      <button type="button" class="btn btn-primary">
+        add User
+      </button>
+    </a>
+  </div>
+  {% if users %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">id</th>
+          <th scope="col">Name</th>
+          <th scope="col">Superuser</th>
+          <th scope="col">Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for user in users %}
+        <tr>
+          <th scope="row">{{ user.id }}</th>
+          <td>{{ user.name }}</td>
+          <td>{{ user.superuser }}</td>
+          <td>
+            <a href="{{ url_for('edit_user', user_id = user.id) }}">
+              edit
+            </a>
+            <a href="{{ url_for('delete_user', user_id = user.id) }}">
+              delete
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

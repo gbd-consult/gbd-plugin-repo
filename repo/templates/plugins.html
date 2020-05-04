@@ -6,7 +6,9 @@
         <div class="card-body">
           <h5 class="card-title">{{ plugin.name }}</h5>
           <p class="card-text">Version: {{ plugin.version }}
-            (letztes Update: {{ plugin.updated_at.strftime('%d.%m.%Y') }})</p>
+            (letztes Update: {{ plugin.updated_at.strftime('%d.%m.%Y') }})
+            hochgeladen von: {{ plugin.user.name}}
+          </p>
           <p class="card-text">{{ plugin.description }}</p>
           {% if plugin.about %}
             <p class="card-text">{{ plugin.about }}</p>

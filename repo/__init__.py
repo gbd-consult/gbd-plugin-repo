@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_httpauth import HTTPBasicAuth
+from flask_login import LoginManager
 import os.path
 
 app = Flask(__name__)
@@ -10,9 +10,9 @@ else:
     app.config.from_object('repo.config_dev')
 
 db = SQLAlchemy(app)
-auth = HTTPBasicAuth()
+login_manager = LoginManager(app)
 
-from repo import models, routes, authentication
+from repo import models, routes, auth
 
 # on a fresh DB run create_all
 from repo.helpers import dbIsPopulated, createSuperuser
