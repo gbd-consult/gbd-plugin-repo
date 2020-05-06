@@ -3,7 +3,7 @@ A small flask app to serve our QGIS plugin repository at https://plugins.gbd-con
 It allows registered users to upload plugins via a web interface.
 Only the newest version of a plugin is kept, so users need to be cautious of what to upload.
 
-Eine kleine Flask Anwendung, die unser QGIS Plugin Repostory unter https://plugins.gbd-consult.de bereit stellt.
+Eine kleine Flask Anwendung, die unser QGIS Plugin Repository unter https://plugins.gbd-consult.de bereit stellt.
 Registrierte Nutzer:innen können Plugins über das Webinterface hochladen.
 Es wird nur die neuste Version eines jeden Plugins behalten. Nutzer:innen müssen also aufpassen, was sie hochladen.
 
