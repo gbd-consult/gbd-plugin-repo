@@ -16,9 +16,9 @@
           </div>
           <div class="form group">
             <div class="form-check">
-              {% if user %}
+              {% if user and user.superuser %}
                 <input type="checkbox" name="superuser" class="form-check-input"
-                checked="{{ user.superuser }}">
+                checked="checked">
               {% else %}
                 <input type="checkbox" name="superuser" class="form-check-input">
               {% endif %}
