@@ -21,6 +21,7 @@ Now you can run the development server using:
 ```
 FLASK_APP=repo FLASK_ENV=development flask run 
 ```
+You can now brose to `localhost:5000` and login with the credentials: `admin/admin`.
 
 ## WIP: Docker Image
 
