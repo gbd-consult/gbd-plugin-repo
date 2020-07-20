@@ -70,9 +70,12 @@ def add_user():
             db.session.add(user)
             db.session.commit()
             flash("successfuly created user: %s" % name)
+            app.logger.info('USER_CREATED: %s(%s) by user %s'
+                % (user.name, user.id, current_user.name))
             return redirect(url_for('get_users'))
     else:
         return render_template('user.html')
+
 
 @app.route('/user/<int:user_id>/edit', methods = ['GET', 'POST'])
 @login_required
@@ -93,13 +96,19 @@ def edit_user(user_id):
                     return redirect(url_for('edit_user', user_id = user_id))
                 user.set_password(password)
                 changed = True
+                app.logger.info('USER_PASSWORD_CHANGED: changed password for %s by %s'
+                    % (user.name, current_user.name))
             if request.form.get('superuser') and not user.superuser:
                 user.superuser = True
                 changed = True
+                app.logger.info('USER_SUPERUSER_CHANGED: %s promoted to superuser by %s'
+                    % (user.name, current_user.name))
             if user.superuser and request.form.get('superuser') is None \
                 and user.id != current_user.id:
                 user.superuser = False
                 changed = True
+                app.logger.info('USER_SUPERUSER_CHANGED: %s demoted to user by %s'
+                    % (user.name, current_user.name))
             if changed:
                 db.session.add(user)
                 db.session.commit()
@@ -132,4 +141,6 @@ def delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
         flash("removed user %s" % user.name)
+        app.logger.info('USER_REMOVED: %s(%s) by user %s'
+            % (user.name, user.id, current_user.name))
         return redirect(url_for('get_users'))

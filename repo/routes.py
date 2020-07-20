@@ -40,8 +40,6 @@ def upload_plugin():
                 existing_plugin = Plugin.query.filter_by(md5_sum = md5(f)).first()
                 if existing_plugin:
                     flash('uploaded plugin is a duplicate!')
-                    logging.info('Upload of %s by %s rejected! Reason: Duplicate' %
-                        (existing_plugin.name, current_user.name))
                     return(redirect(request.url))
 
                 # Check if we can open the zip file
@@ -93,9 +91,13 @@ def upload_plugin():
 
                 if old_plugin:
                     plugin = old_plugin
+                    app.logger.info('PLUGIN_UPDATED: %s(%s) to %s by user %s'
+                        % (name, plugin.id, version, current_user.name))
                     msg = 'successfuly updated %s to Version %s' % (name,version)
                 else:
                     plugin = Plugin()
+                    app.logger.info('PLUGIN_CREATED: %s by user %s'
+                        % (name, current_user.name))
                     msg = 'successfuly uploaded %s' % name
 
 
@@ -132,7 +134,8 @@ def delete_plugin(plugin_id):
         return abort(401)
     db.session.delete(p)
     db.session.commit()
-    app.logger.info('PLUGIN_DELETE: user %s deleted %s' % (current_user.name, p.name))
+    app.logger.info('PLUGIN_DELETED: %s(%s) by user %s' %
+        (p.name, p.id, current_user.name))
     return redirect(url_for('get_plugins'))
 
 
