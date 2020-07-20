@@ -55,6 +55,10 @@ def add_user():
         if name is None or password is None:
             flash("Enter Username and password")
             return redirect(url_for('add_user'))
+        existing_user = User.query.filter_by(name = name).first()
+        if existing_user:
+            flash("An user with that name already exists")
+            return redirect(url_for('add_user'))
         elif len(password) < 8:
             flash("password needs to have at least 8 characters")
             return redirect(url_for('add_user'))

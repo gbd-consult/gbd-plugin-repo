@@ -26,7 +26,7 @@ class Plugin(db.Model):
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
+    name = db.Column(db.String(120), nullable=False, unique = True)
     password_hash = db.Column(db.String(120))
     superuser = db.Column(db.Boolean, nullable=False)
     plugins = db.relationship('Plugin', backref='user', lazy = True)
