@@ -1,6 +1,6 @@
 import os
 from repo import app, db
-from flask import request, Response, render_template, redirect, flash
+from flask import request, Response, render_template, redirect, flash, abort, url_for
 from flask_login import login_required, current_user
 from repo.helpers import readline_generator, md5, newerVersion
 from repo.models import Plugin
@@ -12,7 +12,7 @@ import shutil
 
 @app.route('/upload', methods=['GET','POST'])
 @login_required
-def uploadPlugin():
+def upload_plugin():
     """ Upload a zip compressed QGIS plugin """
     if request.method == 'POST':
         # Check if there is a file part
@@ -40,6 +40,8 @@ def uploadPlugin():
                 existing_plugin = Plugin.query.filter_by(md5_sum = md5(f)).first()
                 if existing_plugin:
                     flash('uploaded plugin is a duplicate!')
+                    logging.info('Upload of %s by %s rejected! Reason: Duplicate' %
+                        (existing_plugin.name, current_user.name))
                     return(redirect(request.url))
 
                 # Check if we can open the zip file
@@ -114,14 +116,29 @@ def uploadPlugin():
                 db.session.commit()
                 flash(msg)
 
-        return(redirect(request.url))
+        return redirect(request.url)
     else:
-        return(render_template("upload.html"))
+        return render_template("upload.html")
+
+
+@app.route('/plugins/<int:plugin_id>/delete')
+@login_required
+def delete_plugin(plugin_id):
+    """ Delete a give plugin """
+    p = Plugin.query.get(plugin_id)
+    if not p:
+        return abort(404)
+    if not (current_user.superuser or current_user.id == p.user_id):
+        return abort(401)
+    db.session.delete(p)
+    db.session.commit()
+    app.logger.info('PLUGIN_DELETE: user %s deleted %s' % (current_user.name, p.name))
+    return redirect(url_for('get_plugins'))
 
 
 @app.route('/plugins.xml')
 @app.route('/')
-def getPlugins():
+def get_plugins():
     """ Generates the 'plugins.xml' and html view from the DB. """
     if request.args.get('qgis'):
         version = request.args.get('qgis')
@@ -129,31 +146,31 @@ def getPlugins():
     else:
         plugins = Plugin.query.all()
 
-    pluginRoot = etree.Element('plugins')
-
-    for p in plugins:
-        pluginElement = etree.Element('pyqgis_plugin', version = p.version, name = p.name)
-
-        version = etree.SubElement(pluginElement, 'version')
-        version.text = p.version
-        description = etree.SubElement(pluginElement, 'description')
-        description.text = p.description
-        author_name = etree.SubElement(pluginElement, 'author_name')
-        author_name.text = p.author_name
-        file_name = etree.SubElement(pluginElement, 'file_name')
-        file_name.text = p.file_name
-        download_url = etree.SubElement(pluginElement, 'download_url')
-        download_url.text = os.path.join(app.config['REPO_ROOT'], p.file_name)
-        qgis_minimum_version = etree.SubElement(pluginElement, 'qgis_minimum_version')
-        qgis_minimum_version.text = p.qgis_min_version
-        qgis_maximum_version = etree.SubElement(pluginElement, 'qgis_maximum_version')
-        qgis_maximum_version.text = p.qgis_max_version
-        md5_sum = etree.SubElement(pluginElement, 'md5_sum')
-        md5_sum.text = p.md5_sum
-
-        pluginRoot.append(pluginElement)
-
     if request.path.endswith('plugins.xml'):
-        return Response(etree.tostring(pluginRoot), mimetype='text/xml')
+        plugin_root = etree.Element('plugins')
+
+        for p in plugins:
+            plugin_element = etree.Element('pyqgis_plugin', version = p.version, name = p.name)
+
+            version = etree.SubElement(plugin_element, 'version')
+            version.text = p.version
+            description = etree.SubElement(plugin_element, 'description')
+            description.text = p.description
+            author_name = etree.SubElement(plugin_element, 'author_name')
+            author_name.text = p.author_name
+            file_name = etree.SubElement(plugin_element, 'file_name')
+            file_name.text = p.file_name
+            download_url = etree.SubElement(plugin_element, 'download_url')
+            download_url.text = os.path.join(app.config['REPO_ROOT'], p.file_name)
+            qgis_minimum_version = etree.SubElement(plugin_element, 'qgis_minimum_version')
+            qgis_minimum_version.text = p.qgis_min_version
+            qgis_maximum_version = etree.SubElement(plugin_element, 'qgis_maximum_version')
+            qgis_maximum_version.text = p.qgis_max_version
+            md5_sum = etree.SubElement(plugin_element, 'md5_sum')
+            md5_sum.text = p.md5_sum
+
+            plugin_root.append(plugin_element)
+
+        return Response(etree.tostring(plugin_root), mimetype='text/xml')
     else:
-        return render_template("plugins.html", plugins = plugins)
+        return render_template("plugins.html", plugins = plugins, user = current_user)

@@ -1,4 +1,4 @@
-from repo.models import User
+from repo.models import User, Plugin
 from repo import login_manager, app, db
 from flask_login import current_user, login_user, logout_user, login_required
 from flask import redirect, url_for, request, flash, render_template, abort
@@ -12,7 +12,7 @@ def load_user(user_id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('getPlugins'))
+        return redirect(url_for('get_plugins'))
     if request.method == 'POST':
         user = User.query.filter_by(name = request.form.get('username')).first()
         if user is None or not user.check_password(request.form.get('password')):
@@ -21,7 +21,7 @@ def login():
         login_user(user)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != "":
-            next_page = url_for('getPlugins')
+            next_page = url_for('get_plugins')
         return redirect(next_page)
     else:
         return render_template('login.html')
@@ -30,7 +30,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('getPlugins'))
+    return redirect(url_for('get_plugins'))
 
 
 @app.route('/users')
@@ -124,6 +124,11 @@ def delete_user(user_id):
         if user.id == current_user.id:
             flash("can't delete yourself")
             return redirect(url_for('get_users'))
+        plugins = Plugin.query.filter_by(user_id=user.id).all()
+        for p in plugins:
+            p.user_id = current_user.id
+        db.session.add_all(plugins)
+        db.session.commit()
         db.session.delete(user)
         db.session.commit()
         flash("removed user %s" % user.name)
