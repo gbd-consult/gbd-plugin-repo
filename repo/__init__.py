@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-import os.path
+import os
 
 app = Flask(__name__)
 if app.config['ENV'] == 'production':
@@ -19,6 +19,8 @@ from repo import models, routes, auth
 from repo.helpers import dbIsPopulated, createSuperuser
 
 if not dbIsPopulated():
+    if not os.path.isdir(app.config['GBD_PLUGIN_PATH']):
+        os.makedirs(app.config['GBD_PLUGIN_PATH'])
     db.create_all()
     su = createSuperuser()
     db.session.add(su)

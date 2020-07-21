@@ -1,7 +1,12 @@
-PLUGIN_PATH = './repo/static/'
-PLUGIN_ROOT = '/static'
-REPO_ROOT = 'http:/localhost'
-SECRET_KEY = 'fnord'
+import os
+
+# Path where the Plugins are stored
+GBD_PLUGIN_PATH = os.getenv('GBD_PLUGIN_PATH', '/data/dl')
+# ROOT URI for Plugin Download
+GBD_PLUGIN_ROOT = os.getenv('GBD_PLUGIN_ROOT', 'http://localhost:8234/dl')
+# Secret key for the app
+SECRET_KEY = os.getenv('SECRET_KEY','notasecret')
+
 #DB Config
-DB_FILE = '/data/plugin.db'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DB_FILE
+SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI',
+    'sqlite:////data/plugin.db')

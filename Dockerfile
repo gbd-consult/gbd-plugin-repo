@@ -9,6 +9,5 @@ COPY ./repo /app/repo
 
 WORKDIR /app
 
-EXPOSE 5000/tcp
 
-CMD ["gunicorn", "-b 0.0.0.0:5000", "repo:app"]
+CMD ["gunicorn", "-b 0.0.0.0:4567", "repo:app"]

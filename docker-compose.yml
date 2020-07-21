@@ -1,8 +1,32 @@
 version: "3"
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - 8234:80
+    depends_on:
+      - pluginrepo
+    networks:
+      - pluginrepo_network
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./data/dl:/srv/dl
+    #environment:
+      #- VIRTUAL_HOST=plugins.gbd-consult.de
+      #- LETSENCRYPT_HOST=plugins.gbd-consult.de
+      #- LETSENCRYPT_EMAIL=info@gbd-consult.de
   pluginrepo:
     build: .
-    ports:
-      - 5000:5000
+    container_name: pluginrepo
     volumes:
       - ./data:/data
+    #environment:
+      #- GBD_PLUGIN_ROOT=https://plugins.gbd-consult.de/dl
+      #- SECRET_KEY=putyoursecrethere!
+    networks:
+      pluginrepo_network:
+        aliases:
+          - pluginrepo
+networks:
+  pluginrepo_network:

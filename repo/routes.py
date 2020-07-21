@@ -18,18 +18,18 @@ def upload_plugin():
         # Check if there is a file part
         if 'file' not in request.files:
             flash('no file part')
-            return redirect(request.url)
+            return redirect(url_for('upload_plugin'))
         file = request.files['file']
 
         # check if the filename is emtpy
         if file.filename == '':
             flash('no selected file')
-            return redirect(request.url)
+            return redirect(url_for('upload_plugin'))
 
         # Check filetype
         if not file.filename.endswith('.zip'):
             flash('wrong filetype')
-            return(redirect(request.url))
+            return(redirect(url_for('upload_plugin')))
 
         # Create a temp file for our zip
         with TemporaryDirectory() as dir:
@@ -40,21 +40,21 @@ def upload_plugin():
                 existing_plugin = Plugin.query.filter_by(md5_sum = md5(f)).first()
                 if existing_plugin:
                     flash('uploaded plugin is a duplicate!')
-                    return(redirect(request.url))
+                    return(redirect(url_for('upload_plugin')))
 
                 # Check if we can open the zip file
                 try:
                     zf = ZipFile(f)
                 except:
                     flash("broken zip file")
-                    return(redirect(request.url))
+                    return(redirect(url_for('upload_plugin')))
 
                 # Check if the zip file contains a metadata.txt file
                 metadataFiles = list(filter(lambda x: x.endswith('/metadata.txt') or x == 'metadata.txt',
                     zf.namelist()))
                 if not len(metadataFiles) == 1:
                     flash("missing metadata.txt")
-                    return(redirect(request.url))
+                    return(redirect(url_for('upload_plugin')))
 
                 # Try to read metadata.txt
                 try:
@@ -73,20 +73,20 @@ def upload_plugin():
 
                 except:
                     flash("invalid metadata.txt file")
-                    return(redirect(request.url))
+                    return(redirect(url_for('upload_plugin')))
 
                 # Check if there already is a plugin with that name
                 old_plugin = Plugin.query.filter_by(file_name = file.filename).first()
                 if old_plugin and not newerVersion(version, old_plugin.version):
                     flash('rejecting upload. uploaded version of %s is older than existing one' % name)
-                    return(redirect(request.url))
+                    return(redirect(url_for('upload_plugin')))
 
                 try:
-                    plugin_path = os.path.join(app.config['PLUGIN_PATH'], file.filename)
+                    plugin_path = os.path.join(app.config['GBD_PLUGIN_PATH'], file.filename)
                     shutil.move(tmp_path, plugin_path)
                 except:
                     flash("copying of new plugin failed")
-                    return(redirect(request.url))
+                    return redirect(url_for('upload_plugin'))
 
 
                 if old_plugin:
@@ -118,7 +118,7 @@ def upload_plugin():
                 db.session.commit()
                 flash(msg)
 
-        return redirect(request.url)
+        return redirect(url_for('upload_plugin'))
     else:
         return render_template("upload.html")
 

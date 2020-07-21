@@ -1,8 +1,7 @@
-PLUGIN_PATH = './repo/static/'
-PLUGIN_ROOT = '/static'
-REPO_ROOT = 'http:/localhost'
-STYLE_FILE = 'style.xsl'
-SECRET_KEY = 'fnord'
+GBD_PLUGIN_PATH = './repo/static/'
+GBD_PLUGIN_ROOT = 'http://localhost:4567/static'
+
+SECRET_KEY = 'notasecret'
+
 #DB Config
-DB_FILE = 'plugin.db'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DB_FILE
+SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
