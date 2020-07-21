@@ -134,6 +134,8 @@ def delete_plugin(plugin_id):
         return abort(401)
     db.session.delete(p)
     db.session.commit()
+    os.remove(os.path.join(
+        app.config['GBD_PLUGIN_PATH'], p.file_name))
     app.logger.info('PLUGIN_DELETED: %s(%s) by user %s' %
         (p.name, p.id, current_user.name))
     return redirect(url_for('get_plugins'))
