@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+import logging
 import os
 
 app = Flask(__name__)
@@ -8,6 +9,13 @@ if app.config['ENV'] == 'production':
     app.config.from_object('repo.config')
 else:
     app.config.from_object('repo.config_dev')
+
+# Setup logging with gunicorn
+if __name__ != '__main__':
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
+
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
