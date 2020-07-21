@@ -21,7 +21,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-from repo import models, routes, auth
+from repo import models, plugins, auth
 
 # on a fresh DB run create_all
 from repo.helpers import dbIsPopulated, createSuperuser

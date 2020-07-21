@@ -19,18 +19,40 @@ pip install -r requirements.txt
 ```
 Now you can run the development server using:
 ```
-FLASK_APP=repo FLASK_ENV=development flask run 
+FLASK_APP=repo FLASK_ENV=development flask run
 ```
 You can now brose to `localhost:5000` and login with the credentials: `admin/admin`.
 
-## WIP: Docker Image
+## Docker Image
 
 To Build:
 ```
 docker-compose build
 ```
+Then create a docker-compose.yml from the default.
+```
+cp docker-compose.yml.default docker-compose.yml
+```
 To run the image:
 ```
 docker-compose up -d
 ```
-Browse to localhost:5000
+Browse to localhost:8234
+
+## Deployment
+
+First build the Docker image.
+```
+docker-compose build
+```
+Then create a docker-compose.yml from the default.
+```
+cp docker-compose.yml.default docker-compose.yml
+```
+Open it and uncomment the environment variables.
+Change them for your Setup.
+Finally you can run the app:
+```
+docker-compose up -d
+```
+Enjoy! 🛰️

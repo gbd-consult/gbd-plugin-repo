@@ -53,5 +53,15 @@
         </div>
       </div>
     {% endfor %}
+  {% else %}
+      <p>There are no plugins here. Nothing but empty space.</p>
+      <div class="text-center">
+        <i class="fas fa-user-astronaut fa-5x"></i>
+        <p/>
+        <a href="{{ url_for('upload_plugin') }}" class="btn btn-info">
+          <i class="fas fa-file-upload"></i>
+          Upload a Plugin
+        </a>
+      </div>
   {% endif %}
 {% endblock %}
