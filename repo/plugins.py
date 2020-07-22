@@ -166,7 +166,7 @@ def get_plugins():
             file_name = etree.SubElement(plugin_element, 'file_name')
             file_name.text = p.file_name
             download_url = etree.SubElement(plugin_element, 'download_url')
-            download_url.text = os.path.join(app.config['REPO_ROOT'], p.file_name)
+            download_url.text = os.path.join(app.config['GBD_PLUGIN_ROOT'], p.file_name)
             qgis_minimum_version = etree.SubElement(plugin_element, 'qgis_minimum_version')
             qgis_minimum_version.text = p.qgis_min_version
             qgis_maximum_version = etree.SubElement(plugin_element, 'qgis_maximum_version')
