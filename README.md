@@ -31,7 +31,7 @@ docker-compose build
 ```
 Then create a docker-compose.yml from the default.
 ```
-cp docker-compose.yml.default docker-compose.yml
+cp docker-compose_default.yml docker-compose.yml
 ```
 To run the image:
 ```
@@ -47,7 +47,7 @@ docker-compose build
 ```
 Then create a docker-compose.yml from the default.
 ```
-cp docker-compose.yml.default docker-compose.yml
+cp docker-compose_default.yml docker-compose.yml
 ```
 Open it and uncomment the environment variables.
 Change them for your Setup.

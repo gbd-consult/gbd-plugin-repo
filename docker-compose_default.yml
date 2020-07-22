@@ -1,7 +1,7 @@
 version: "3"
 services:
   nginx:
-    image: nginx:latest
+    image: nginx:1.19-alpine
     container_name: nginx
     ports:
       - 8234:80
@@ -10,9 +10,10 @@ services:
     networks:
       - pluginrepo_network
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/templates/default.conf.template
       - ./data/dl:/srv/dl
-    #environment:
+    environment:
+      - VIRTUAL_HOST=localhost:8234
       #- VIRTUAL_HOST=plugins.gbd-consult.de
       #- LETSENCRYPT_HOST=plugins.gbd-consult.de
       #- LETSENCRYPT_EMAIL=info@gbd-consult.de
