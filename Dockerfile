@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.8.3-slim
 
 MAINTAINER Tristan Kessler "kessler@gbd-consult.de"
 
