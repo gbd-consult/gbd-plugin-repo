@@ -14,6 +14,7 @@ services:
       - ./data/dl:/srv/dl
     environment:
       - VIRTUAL_HOST=localhost:8234
+      - UPLOAD_SIZE=10m
       #- VIRTUAL_HOST=plugins.gbd-consult.de
       #- LETSENCRYPT_HOST=plugins.gbd-consult.de
       #- LETSENCRYPT_EMAIL=info@gbd-consult.de
