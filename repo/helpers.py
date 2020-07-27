@@ -1,10 +1,11 @@
-# Helper functions
+"""Helper functions."""
 import hashlib
 from repo.models import Plugin, User
-import os
-from configparser import ConfigParser
+from sqlalchemy.exc import OperationalError
+
 
 def readline_generator(fp):
+    """Return a generator for readline."""
     line = fp.readline().decode()
     while line:
         yield line
@@ -12,16 +13,16 @@ def readline_generator(fp):
 
 
 def dbIsPopulated():
-    """ Check if our database is already populated. """
+    """Check if our database is already populated."""
     try:
-        plugins = Plugin.query.all()
+        Plugin.query.all()
         return True
-    except:
+    except OperationalError:
         return False
 
 
 def createSuperuser():
-    """ Create a default superuser account. """
+    """Create a default superuser account."""
     su = User(
         name='admin',
         superuser=True
@@ -31,9 +32,13 @@ def createSuperuser():
 
 
 def md5(file):
-    """ Returns the md5 hash of a file.
-    Args:
-        file (file object): the input file to generate the hash from.
+    """Return the md5 hash of a file.
+
+    Arguments:
+    ---------
+        file : file object
+            the input file to generate the hash from.
+
     """
     file.seek(0)
     hash_md5 = hashlib.md5()
@@ -43,9 +48,14 @@ def md5(file):
 
 
 def newerVersion(a, b):
-    """ Returns true if the version a is newer than b.
-    Args:
-        a, b (string): a version string
+    """Return true if the version a is newer than b.
+
+    Argumnents:
+    ----------
+        a,b : string
+            a version string
+
     """
     return (a != b) and \
-    (len(list(filter(lambda x: x[0] < x[1], zip(a.split('.'), b.split('.'))))) == 0)
+        (len(list(filter(lambda x: x[0] < x[1],
+                         zip(a.split('.'), b.split('.'))))) == 0)
