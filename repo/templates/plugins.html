@@ -1,5 +1,15 @@
 {% extends "layout.html" %}
 {% block body %}
+  <div class="dropdown text-right" style="padding-bottom:10px">
+  <button class="btn btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    QGIS Version
+  </button>
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    <a class="dropdown-item" href="{{ url_for('get_plugins', qgis='2.18') }}">2.18</a>
+    <a class="dropdown-item" href="{{ url_for('get_plugins', qgis='3.10') }}">3.10</a>
+    <a class="dropdown-item" href="{{ url_for('get_plugins') }}">Alle</a>
+  </div>
+</div>
   {% if plugins %}
     {% for plugin in plugins %}
       <div class="card">
