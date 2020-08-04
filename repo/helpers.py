@@ -50,12 +50,19 @@ def md5(file):
 def newerVersion(a, b):
     """Return true if the version a is newer than b.
 
-    Argumnents:
-    ----------
-        a,b : string
-            a version string
+    Arguments:
+    ---------
+        a : string
+            version string a (if this is newer return true)
+        b : string
+            version string b
 
     """
-    return (a != b) and \
-        (len(list(filter(lambda x: x[0] < x[1],
-                         zip(a.split('.'), b.split('.'))))) == 0)
+    a_split = [int(x) for x in a.split('.')]
+    b_split = [int(x) for x in b.split('.')]
+    a_split = a_split + [0] * (len(b_split) - len(a_split))
+    b_split = b_split + [0] * (len(a_split) - len(b_split))
+    for (a_value, b_value) in zip(a_split, b_split):
+        if a_value > b_value:
+            return True
+    return False

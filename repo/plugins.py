@@ -160,13 +160,15 @@ def delete_plugin(plugin_id):
 @app.route('/')
 def get_plugins():
     """Generate the 'plugins.xml' and html view from the DB."""
+    plugins = Plugin.query.all()
     if request.args.get('qgis'):
         version = request.args.get('qgis')
-        plugins = Plugin.query.filter(
-            Plugin.qgis_min_version <= version,
-            Plugin.qgis_max_version >= version).all()
-    else:
-        plugins = Plugin.query.all()
+        print(newerVersion(version, plugins[0].qgis_max_version))
+        print(plugins[0].qgis_max_version)
+        print(version)
+        plugins = [p for p in plugins
+                   if not newerVersion(p.qgis_min_version, version) and
+                   not newerVersion(version, p.qgis_max_version)]
 
     if request.path.endswith('plugins.xml'):
         plugin_root = etree.Element('plugins')
