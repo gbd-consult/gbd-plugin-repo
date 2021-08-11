@@ -29,6 +29,10 @@ class Plugin(db.Model):
         return 'Plugin: %s, version %s, zip_file: %s' \
             % (self.name, self.version, self.file_name)
 
+user_role_association = db.Table('user_role',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('role_id', db.Integer, db.ForeignKey('role.id'), primary_key=True)
+)
 
 class User(UserMixin, db.Model):
     """Model for our users."""
@@ -38,6 +42,8 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(120))
     superuser = db.Column(db.Boolean, nullable=False)
     plugins = db.relationship('Plugin', backref='user', lazy=True)
+    roles = db.relationship('Role', secondary=user_role_association, lazy='subquery',
+                            backref=db.backref('users', lazy=True))
 
     def set_password(self, password):
         """Set the password for the user."""
@@ -46,3 +52,7 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """Check the users password."""
         return check_password_hash(self.password_hash, password)
+
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False, unique=True)

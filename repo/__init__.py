@@ -2,10 +2,12 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_principal import Principal
 import logging
 import os
 
 app = Flask(__name__)
+Principal(app)
 if app.config['ENV'] == 'production':
     app.config.from_object('repo.config')
 else:
@@ -28,6 +30,7 @@ from repo import models, plugins, auth
 from repo.helpers import dbIsPopulated, createSuperuser
 
 if not dbIsPopulated():
+    print("no database found, generating new one")
     if not os.path.isdir(app.config['GBD_PLUGIN_PATH']):
         os.makedirs(app.config['GBD_PLUGIN_PATH'])
     db.create_all()
