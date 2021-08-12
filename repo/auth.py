@@ -4,24 +4,11 @@ from repo import login_manager, app, db
 from flask_login import current_user, login_user, logout_user, login_required
 from flask import redirect, url_for, request, flash, render_template, abort, current_app, session
 from werkzeug.urls import url_parse
-from flask_principal import identity_changed, Identity, AnonymousIdentity, identity_loaded, RoleNeed, UserNeed
 
 @login_manager.user_loader
 def load_user(user_id):
     """Load a user by id."""
     return User.query.filter_by(id=user_id).first()
-
-
-@identity_loaded.connect_via(app)
-def on_identity_loaded(sender, identity):
-    identity.user = current_user
-
-    if hasattr(current_user, 'id'):
-        identity.provides.add(UserNeed(current_user.id))
-    
-    if hasattr(current_user, 'roles'):
-        for role in current_user.roles:
-            identity.provides.add(RoleNeed(role.name))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -37,8 +24,6 @@ def login():
             return redirect(url_for('login'))
 
         login_user(user)
-        identity_changed.send(current_app._get_current_object(), 
-                                identity=Identity(user.id))
 
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != "":
@@ -52,12 +37,6 @@ def login():
 def logout():
     """Log out the user."""
     logout_user()
-
-    for key in ('identity.name', 'identity.auth_type'):
-        session.pop(key, None)
-
-    identity_changed.send(current_app._get_current_object(),
-                        identity=AnonymousIdentity())
 
     return redirect(url_for('get_plugins'))
 
