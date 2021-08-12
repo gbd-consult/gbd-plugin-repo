@@ -15,6 +15,7 @@
           <th scope="col">id</th>
           <th scope="col">Name</th>
           <th scope="col">Superuser</th>
+          <th scope="col">Roles</th>
           <th scope="col"/>
         </tr>
       </thead>
@@ -24,6 +25,7 @@
           <th scope="row">{{ user.id }}</th>
           <td>{{ user.name }}</td>
           <td>{{ user.superuser }}</td>
+          <td>{{ user.roles|map(attribute='name')|join(', ') }}</td>
           <td>
             <div class="text-right">
               <div class="btn-group" role="group">
