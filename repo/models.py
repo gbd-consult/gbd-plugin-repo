@@ -4,6 +4,10 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
+plugin_role_permissions_association = db.Table('plugin_role',
+    db.Column('plugin_id', db.Integer, db.ForeignKey('plugin.id'), primary_key=True),
+    db.Column('role_id', db.Integer, db.ForeignKey('role.id'), primary_key=True)
+)
 
 class Plugin(db.Model):
     """Model for our QGIS Plugins."""
@@ -23,6 +27,10 @@ class Plugin(db.Model):
     updated_at = db.Column(db.DateTime(),
                            default=datetime.utcnow,
                            onupdate=datetime.utcnow)
+    public = db.Column(db.Boolean(), default=False)
+    roles = db.relationship('Role', secondary=plugin_role_permissions_association, lazy='subquery',
+                            backref=db.backref('plugins', lazy=True))
+
 
     def __repr__(self):
         """Show a Representation of the Plugin."""

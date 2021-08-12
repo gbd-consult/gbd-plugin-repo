@@ -5,12 +5,13 @@ from flask import request, Response, render_template, \
     redirect, flash, abort, url_for
 from flask_login import login_required, current_user
 from repo.helpers import readline_generator, md5, newerVersion
-from repo.models import Plugin
+from repo.models import Plugin, Role, User
 from lxml import etree
 from zipfile import ZipFile
 from configparser import ConfigParser
 from tempfile import TemporaryDirectory
 import shutil
+from sqlalchemy import or_
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -159,8 +160,21 @@ def delete_plugin(plugin_id):
 @app.route('/plugins.xml')
 @app.route('/')
 def get_plugins():
+    print(current_user)
     """Generate the 'plugins.xml' and html view from the DB."""
-    plugins = Plugin.query.all()
+    if current_user.is_anonymous:
+        plugins = Plugin.query.filter_by(public=True)
+    elif current_user.superuser:
+        plugins = Plugin.query.all()
+    else:
+        print(current_user.id)
+        plugins = Plugin.query.join(Plugin.roles, isouter=True).join(Role.users, isouter=True).filter(
+                or_( User.id == current_user.id, 
+                     Plugin.public == True, 
+                     Plugin.user_id == current_user.id)
+            ).all()
+        print(plugins)
+
     if request.args.get('qgis'):
         version = request.args.get('qgis')
         print(newerVersion(version, plugins[0].qgis_max_version))
@@ -201,5 +215,52 @@ def get_plugins():
 
         return Response(etree.tostring(plugin_root), mimetype='text/xml')
     else:
+        roles = Role.query.all()
         return render_template("plugins.html",
-                               plugins=plugins, user=current_user)
+                               plugins=plugins, user=current_user, roles=roles)
+
+@app.route('/plugin/<int:plugin_id>/edit', methods=['POST'])
+def edit_plugin(plugin_id):
+    
+    plugin = Plugin.query.filter_by(id=plugin_id).first()
+
+    if not plugin:
+        return abort(404)
+
+    if not (current_user.superuser or plugin.user.id == current_user.id):
+        return abort(401)
+
+    changed = False
+    if current_user.superuser:  # only superuser can assign roles at the moment
+        roles = Role.query.all()
+        for role in roles:
+            should_have_access = request.form.get(f'role_{role.id}') == "on"
+            has_access = (role in plugin.roles)
+            if has_access and not should_have_access:
+                plugin.roles.remove(role)
+                changed = True
+                app.logger.info( f'PLUGIN_ROLE_REMOVED: {role.name} added to plugin {plugin.name}({plugin.id}) by {current_user.name}')
+            elif should_have_access and not has_access:
+                app.logger.info( f'PLUGIN_ROLE_ADDED: {role.name} added to plugin {plugin.name}({plugin.id}) by {current_user.name}')
+                plugin.roles.append(role)
+                changed = True
+    
+    # uploader and superuser can both set a plugins visibility to public
+    should_be_public = (request.form.get('public') == "on")
+    if should_be_public and not plugin.public:
+        plugin.public = True
+        changed = True
+        app.logger.info( f'PLUGIN_MADE_PUBLIC: plugin {plugin.name}({plugin.id}) made public by {current_user.name}')
+    elif plugin.public and not should_be_public:
+        plugin.public = False
+        changed = True
+        app.logger.info( f'PLUGIN_MADE_PRIVATE: plugin {plugin.name}({plugin.id}) made private by {current_user.name}')
+
+    if changed:
+        db.session.add(plugin)
+        db.session.commit()
+        flash("successfuly changed plugin: %s" % plugin.name)
+    else:
+        flash("no changes were made")
+
+    return redirect(url_for('get_plugins'))
