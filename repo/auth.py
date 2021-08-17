@@ -5,6 +5,20 @@ from flask_login import current_user, login_user, logout_user, login_required
 from flask import redirect, url_for, request, flash, render_template, abort, current_app, session
 from werkzeug.urls import url_parse
 
+
+@login_manager.request_loader
+def load_user_from_header(request):
+    auth = request.authorization
+    if not auth:
+        return None # no basic auth provided, continue with normal auth
+
+    user = User.query.filter_by(name=auth.username).first()
+    if not user or not user.check_password(auth.password):
+        abort(401) # wrong basic auth provided deny access
+
+    return user # basic auth works
+
+
 @login_manager.user_loader
 def load_user(user_id):
     """Load a user by id."""
