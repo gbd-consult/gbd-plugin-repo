@@ -45,7 +45,7 @@
                   Repository
                 </a>
               {% endif %}
-              <a href="{{ config['GBD_PLUGIN_ROOT'] }}/{{ plugin.file_name }}"
+              <a href="{{ url_for('download_plugin', filename=plugin.file_name) }}"
                 class="btn btn-primary">
                 <i class="fas fa-download"></i>
                 Download
@@ -116,7 +116,7 @@
       <p>There are no plugins here. Nothing but empty space.</p>
       <div class="text-center">
         <i class="fas fa-user-astronaut fa-5x"></i>
-        <p/>
+        <p></p>
         <a href="{{ url_for('upload_plugin') }}" class="btn btn-info">
           <i class="fas fa-file-upload"></i>
           Upload a Plugin

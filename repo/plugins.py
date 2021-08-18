@@ -2,7 +2,7 @@
 import os
 from repo import app, db
 from flask import request, Response, render_template, \
-    redirect, flash, abort, url_for
+    redirect, flash, abort, url_for, send_from_directory
 from flask_login import login_required, current_user
 from repo.helpers import readline_generator, md5, newerVersion
 from repo.models import Plugin, Role, User
@@ -11,7 +11,7 @@ from zipfile import ZipFile
 from configparser import ConfigParser
 from tempfile import TemporaryDirectory
 import shutil
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -97,8 +97,7 @@ def upload_plugin():  # FIXME: This is very complex spaghetti code.
                     return redirect(url_for('upload_plugin'))
 
                 try:
-                    plugin_path = os.path.join(
-                        app.config['GBD_PLUGIN_PATH'], file.filename)
+                    plugin_path = os.path.join(app.root_path, app.config['GBD_PLUGIN_PATH'], file.filename)
                     shutil.move(tmp_path, plugin_path)
                 except:
                     flash("copying of new plugin failed")
@@ -150,8 +149,8 @@ def delete_plugin(plugin_id):
         return abort(401)
     db.session.delete(p)
     db.session.commit()
-    os.remove(os.path.join(
-        app.config['GBD_PLUGIN_PATH'], p.file_name))
+    full_path = os.path.join(app.root_path, app.config['GBD_PLUGIN_PATH'], p.file_name)
+    os.remove(full_path)
     app.logger.info('PLUGIN_DELETED: %s(%s) by user %s' %
                     (p.name, p.id, current_user.name))
     return redirect(url_for('get_plugins'))
@@ -167,19 +166,14 @@ def get_plugins():
     elif current_user.superuser:
         plugins = Plugin.query.all()
     else:
-        print(current_user.id)
         plugins = Plugin.query.join(Plugin.roles, isouter=True).join(Role.users, isouter=True).filter(
                 or_( User.id == current_user.id, 
                      Plugin.public == True, 
                      Plugin.user_id == current_user.id)
             ).all()
-        print(plugins)
 
     if request.args.get('qgis'):
         version = request.args.get('qgis')
-        print(newerVersion(version, plugins[0].qgis_max_version))
-        print(plugins[0].qgis_max_version)
-        print(version)
         plugins = [p for p in plugins
                    if not newerVersion(p.qgis_min_version, version) and
                    not newerVersion(version, p.qgis_max_version)]
@@ -200,8 +194,7 @@ def get_plugins():
             file_name = etree.SubElement(plugin_element, 'file_name')
             file_name.text = p.file_name
             download_url = etree.SubElement(plugin_element, 'download_url')
-            download_url.text = os.path.join(
-                app.config['GBD_PLUGIN_ROOT'], p.file_name)
+            download_url.text = url_for('download_plugin', filename=p.file_name, _external=True)
             qgis_minimum_version = etree.SubElement(
                 plugin_element, 'qgis_minimum_version')
             qgis_minimum_version.text = p.qgis_min_version
@@ -264,3 +257,28 @@ def edit_plugin(plugin_id):
         flash("no changes were made")
 
     return redirect(url_for('get_plugins'))
+
+
+@app.route('/download/<string:filename>')
+def download_plugin(filename):
+    if current_user.is_anonymous:
+        plugin = Plugin.query.filter(and_(Plugin.file_name == filename, Plugin.public == True)).first()
+        #plugin = Plugin.query.filter(Plugin.file_name == filename).first()
+    elif current_user.superuser:
+        plugin = Plugin.query.filter(Plugin.file_name == filename).first()
+    else:
+        plugin = Plugin.query.join(Plugin.roles, isouter=True).join(Role.users, isouter=True).filter(
+            and_(
+                Plugin.file_name == filename,
+                or_(
+                    Plugin.public == True,
+                    User.id == current_user.id
+                )
+        )).first()
+    
+
+    if not plugin:
+        abort(404)
+
+    full_path = os.path.join(app.root_path, app.config['GBD_PLUGIN_PATH'])
+    return send_from_directory(full_path, plugin.file_name)
