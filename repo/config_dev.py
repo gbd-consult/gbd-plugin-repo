@@ -1,5 +1,4 @@
 GBD_PLUGIN_PATH = 'static/'
-GBD_PLUGIN_ROOT = 'http://localhost:4567/static'
 
 SECRET_KEY = 'notasecret'
 
