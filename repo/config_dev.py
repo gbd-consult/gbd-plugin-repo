@@ -1,5 +1,4 @@
-GBD_PLUGIN_PATH = './repo/static/'
-GBD_PLUGIN_ROOT = 'http://localhost:4567/static'
+GBD_PLUGIN_PATH = 'static/'
 
 SECRET_KEY = 'notasecret'
 

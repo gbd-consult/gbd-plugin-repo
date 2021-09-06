@@ -16,14 +16,20 @@
           </div>
           <div class="form group">
             <div class="form-check">
-              {% if user and user.superuser %}
-                <input type="checkbox" name="superuser" class="form-check-input"
-                checked="checked">
-              {% else %}
-                <input type="checkbox" name="superuser" class="form-check-input">
-              {% endif %}
-              <label class="form-check-label" for="superuser">Superuser</label>
+              <input type="checkbox" id="superuser" name="superuser" class="form-check-input"
+                {{'checked="checked"' if user and user.superuser else ''}}>
+              <label class="form-check-label" for="superuser"><i>Superuser</i></label>
             </div>
+          </div>
+          <hr>
+          <div class="form-group">
+            {% for role in roles %}
+            <div class="form-check">
+              <input type="checkbox" name="role_{{role.id}}" id="role_{{role.id}}" class="form-check-input" 
+                {{'checked="checked"' if user and role in user.roles else '' }}>
+              <label for="role_{{role.id}}">{{role.name}}</label>
+            </div>
+            {% endfor %}
           </div>
           <div class="text-right">
             <button type="submit" class="btn btn-primary">

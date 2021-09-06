@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block body %}
+        <form method="post" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="rolename">Rolename</label>
+            {% if role %}
+              <input type="text" name="rolename" class="form-control"
+                placeholder="{{ role.name }}" >
+            {% else %}
+              <input type="text" name="rolename" class="form-control">
+            {% endif %}
+          </div>
+          <div class="text-right">
+            <button type="submit" class="btn btn-primary">
+              {% if role %}
+                Update
+              {% else %}
+                Create
+              {% endif %}
+            </button>
+          </div>
+        </form>
+    </div>
+{% endblock %}

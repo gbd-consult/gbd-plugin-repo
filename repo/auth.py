@@ -1,9 +1,22 @@
 """Authentication end points."""
-from repo.models import User, Plugin
+from repo.models import User, Plugin, Role
 from repo import login_manager, app, db
 from flask_login import current_user, login_user, logout_user, login_required
-from flask import redirect, url_for, request, flash, render_template, abort
+from flask import redirect, url_for, request, flash, render_template, abort, current_app, session
 from werkzeug.urls import url_parse
+
+
+@login_manager.request_loader
+def load_user_from_header(request):
+    auth = request.authorization
+    if not auth:
+        return None # no basic auth provided, continue with normal auth
+
+    user = User.query.filter_by(name=auth.username).first()
+    if not user or not user.check_password(auth.password):
+        abort(401) # wrong basic auth provided deny access
+
+    return user # basic auth works
 
 
 @login_manager.user_loader
@@ -23,7 +36,9 @@ def login():
                 not user.check_password(request.form.get('password')):
             flash('Invalid username or password')
             return redirect(url_for('login'))
+
         login_user(user)
+
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != "":
             next_page = url_for('get_plugins')
@@ -36,6 +51,7 @@ def login():
 def logout():
     """Log out the user."""
     logout_user()
+
     return redirect(url_for('get_plugins'))
 
 
@@ -55,6 +71,7 @@ def add_user():
     """Add a new User to the Database."""
     if not current_user.superuser:
         return abort(401)
+    roles = Role.query.all()
     if request.method == 'POST':
         name = request.form.get('username')
         password = request.form.get('password')
@@ -77,6 +94,12 @@ def add_user():
                 name=name,
                 superuser=superuser)
             user.set_password(password)
+
+            for role in roles:
+                should_have_role = (request.form.get(f'role_{role.id}') == "on")
+                if should_have_role:
+                    user.roles.append(role)
+
             db.session.add(user)
             db.session.commit()
             flash("successfuly created user: %s" % name)
@@ -84,7 +107,7 @@ def add_user():
                             % (user.name, user.id, current_user.name))
             return redirect(url_for('get_users'))
     else:
-        return render_template('user.html')
+        return render_template('user.html', roles=roles)
 
 
 @app.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
@@ -97,6 +120,8 @@ def edit_user(user_id):
         user = User.query.filter_by(id=user_id).first()
         if not user:
             return abort(404)
+        roles = Role.query.all()
+
         if request.method == 'POST':
             changed = False
             password = request.form.get('password')
@@ -122,6 +147,19 @@ def edit_user(user_id):
                 app.logger.info(
                     'USER_SUPERUSER_CHANGED: %s demoted to user by %s'
                     % (user.name, current_user.name))
+            
+            for role in roles:
+                should_have_role = request.form.get(f'role_{role.id}') == "on"
+                has_role = (role in user.roles)
+                if should_have_role and not has_role:
+                    user.roles.append(role)
+                    changed = True
+                    app.logger.info( f'USER_ROLE_ADDED: {role.name} added to user {user.name}({user.id}) by {current_user.name}')
+                elif has_role and not should_have_role:
+                    user.roles.remove(role)
+                    changed = True
+                    app.logger.info( f'USER_ROLE_REMOVED: {role.name} added to user {user.name}({user.id}) by {current_user.name}')
+
             if changed:
                 db.session.add(user)
                 db.session.commit()
@@ -131,7 +169,7 @@ def edit_user(user_id):
                 flash("nothing changed")
                 return redirect(url_for('edit_user', user_id=user_id))
         else:
-            return render_template('user.html', user=user)
+            return render_template('user.html', user=user, roles=roles)
 
 
 @app.route('/user/<int:user_id>/delete')
@@ -158,3 +196,90 @@ def delete_user(user_id):
         app.logger.info('USER_REMOVED: %s(%s) by user %s'
                         % (user.name, user.id, current_user.name))
         return redirect(url_for('get_users'))
+
+@app.route('/roles')
+@login_required
+def get_roles():
+    """List all roles."""
+    if not current_user.superuser:
+        return abort(401)
+    roles = Role.query.all()
+    return render_template('roles.html', roles=roles)
+
+
+@app.route('/role/add', methods=['GET', 'POST'])
+@login_required
+def add_role():
+    """Add a new role to the database."""
+    if not current_user.superuser:
+        return abort(401)
+    if request.method == 'POST':
+        name = request.form.get('rolename')
+        if name is None:
+            flash("Enter name for role")
+            return redirect(url_for('add_role'))
+        existing_role = Role.query.filter_by(name=name).first()
+        if existing_role:
+            flash("A role with that name already exists")
+            return redirect(url_for('add_role'))
+        else:
+            role = Role(name=name)
+            db.session.add(role)
+            db.session.commit()
+            flash("successfully created role: %s" % name)
+            app.logger.info('ROLE_CREATED: %s(%s) by user %s'
+                            % (role.name, role.id, current_user.name))
+            return redirect(url_for('get_roles'))
+    else:
+        return render_template('role.html')
+
+
+@app.route('/role/<int:role_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_role(role_id):
+    """Edit a given role."""
+    if not current_user.superuser:
+        return abort(401)
+    else:
+        role = Role.query.filter_by(id=role_id).first()
+        if not role:
+            return abort(404)
+        if request.method == 'POST':
+            changed = False
+
+            rolename = request.form.get('rolename')
+            if rolename and rolename != role.name:
+                old = role.name
+                role.name = rolename
+                changed = True
+                app.logger.info('ROLE_NAME_CHANGED: %s(%s) renamed to %s by %s' %
+                                    (old, role.id, role.name, current_user.name))
+            if changed:
+                db.session.add(role)
+                db.session.commit()
+                flash("successfully changed role")
+                return redirect(url_for('get_roles'))
+            else:
+                flash("nothing changed")
+                return redirect(url_for('edit_role', role_id=role_id))
+        else:
+            return render_template('role.html', role=role)
+
+
+@app.route('/role/<int:role_id>/delete')
+@login_required
+def delete_role(role_id):
+    if not current_user.superuser:
+        return abort(401)
+    else:
+        role = Role.query.filter_by(id=role_id).first()
+        if not role:
+            return abort(404)
+        # maybe add check to not delete admin role, if superuser ends up not being hardcoded
+
+        db.session.delete(role)
+        db.session.commit()
+        flash("deleted role %s" % role.name)
+        app.logger.info('ROLE_REMOVED: %s(%s) by user %s' % 
+                        (role.name, role.id, current_user.name))
+        return redirect(url_for('get_roles'))

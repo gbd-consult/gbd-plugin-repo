@@ -1,41 +1,37 @@
 {% extends "layout.html" %}
 {% block body %}
   <div class="container" style="padding-bottom: 15px">
-    <a href="{{url_for('add_user') }}">
+    <a href="{{url_for('add_role') }}">
       <button type="button" class="btn btn-primary">
         <i class="fas fa-user-plus"></i>
-        add User
+        add Role
       </button>
     </a>
   </div>
-  {% if users %}
+  {% if roles %}
     <table class="table">
       <thead>
         <tr>
           <th scope="col">id</th>
           <th scope="col">Name</th>
-          <th scope="col">Superuser</th>
-          <th scope="col">Roles</th>
           <th scope="col"/>
         </tr>
       </thead>
       <tbody>
-      {% for user in users %}
+      {% for role in roles %}
         <tr>
-          <th scope="row">{{ user.id }}</th>
-          <td>{{ user.name }}</td>
-          <td>{{ user.superuser }}</td>
-          <td>{{ user.roles|map(attribute='name')|join(', ') }}</td>
+          <th scope="row">{{ role.id }}</th>
+          <td>{{ role.name }}</td>
           <td>
             <div class="text-right">
               <div class="btn-group" role="group">
                 <a class = "btn btn-sm btn-info"
-                  href="{{ url_for('edit_user', user_id = user.id) }}">
+                  href="{{ url_for('edit_role', role_id = role.id) }}">
                   <i class="fas fa-user-edit"></i>
                   edit
                 </a>
                 <a class = "btn btn-sm btn-danger"
-                  href="{{ url_for('delete_user', user_id = user.id) }}">
+                  href="{{ url_for('delete_role', role_id = role.id) }}">
                   <i class="fas fa-trash-alt"></i>
                   delete
                 </a>

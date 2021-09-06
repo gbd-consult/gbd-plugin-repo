@@ -25,7 +25,7 @@
             <tbody>
               <tr>
                 <td>Version</td>
-                <td>{{plugin.version}}</td>
+                <td>{{ plugin.version }}</td>
               </tr>
               <tr>
                 <td>letztes Update</td>
@@ -45,20 +45,70 @@
                   Repository
                 </a>
               {% endif %}
-              <a href="{{ config['GBD_PLUGIN_ROOT'] }}/{{ plugin.file_name }}"
+              <a href="{{ url_for('download_plugin', filename=plugin.file_name) }}"
                 class="btn btn-primary">
                 <i class="fas fa-download"></i>
                 Download
               </a>
-              {% if plugin.user_id == user.id or user.superuser %}
-              <a href="{{ url_for('delete_plugin', plugin_id = plugin.id)}}"
-                class="btn btn-danger">
-                <i class="fas fa-trash"></i>
-                Delete
-              </a>
-              {% endif %}
             </div>
           </div>
+
+
+          {% if plugin.user_id == user.id or user.superuser %}
+            <hr>
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{{ url_for('delete_plugin', plugin_id = plugin.id)}}"
+                  class="btn btn-sm btn-danger">
+                  <i class="fas fa-trash"></i>
+                  Delete Plugin
+                </a>
+              </div>
+                <div class="col-md-6 text-right">
+                  <button class="btn btn-sm btn-warning" 
+                    data-toggle="collapse" data-target="#collapse_{{plugin.id}}"
+                    aria-expanded="false" aria-controls="collapse_{{plugin.id}}"
+                  >
+                    <i class="fas fa-lock"></i>
+                    Permissions
+                  </button>
+                </div>
+            </div>
+
+            <div class="collapse" id="collapse_{{plugin.id}}">
+              <div class="card card-body">
+                  <form method="post" enctype="multipart/form-data" action="{{url_for('edit_plugin', plugin_id=plugin.id)}}">
+
+                    <p>If a plugin is set to "public" it is visible to all visitors</p>
+                    <div class="form-group">
+                      <div class="form-check">
+                        <input type="checkbox" name="public" id="public" class="form-check-input" 
+                          {{'checked="checked"' if plugin and plugin.public else '' }} />
+                        <label for="public">public</label>
+                      </div>
+                    </div>
+
+                    {% if user.superuser %}
+                      <p>Users with the following roles have <b>read access</b>:</p>
+                      <div class="form-group">
+                        {% for role in roles %}
+                          <div class="form-check">
+                            <input type="checkbox" name="role_{{role.id}}" id="role_{{role.id}}" class="form-check-input" 
+                              {{'checked="checked"' if plugin and role in plugin.roles else '' }}>
+                            <label for="role_{{role.id}}">{{role.name}}</label>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary">Update roles</button>
+
+                  </form>
+              </div>
+            </div>
+          {% endif %}
+
+
         </div>
       </div>
     {% endfor %}
@@ -66,7 +116,7 @@
       <p>There are no plugins here. Nothing but empty space.</p>
       <div class="text-center">
         <i class="fas fa-user-astronaut fa-5x"></i>
-        <p/>
+        <p></p>
         <a href="{{ url_for('upload_plugin') }}" class="btn btn-info">
           <i class="fas fa-file-upload"></i>
           Upload a Plugin
