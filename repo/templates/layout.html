@@ -21,12 +21,10 @@
           <li class="nav-item ">
             <a class="nav-link" href="/">Plugins</a>
           </li>
-          {% if current_user.is_authenticated %}
+          {% if current_user.is_authenticated and current_user.superuser %}
           <li class="nav-item">
             <a class="nav-link" href="/upload">Upload</a>
           </li>
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.superuser %}
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('get_users')}}">Users</a>
           </li>

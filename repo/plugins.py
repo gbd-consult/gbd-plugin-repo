@@ -18,6 +18,8 @@ from sqlalchemy import or_, and_
 @login_required
 def upload_plugin():  # FIXME: This is very complex spaghetti code.
     """Upload a zip compressed QGIS plugin."""
+    if not (current_user.superuser):
+        abort(401)
     if request.method == 'POST':
         # Check if there is a file part
         if 'file' not in request.files:
@@ -159,7 +161,6 @@ def delete_plugin(plugin_id):
 @app.route('/plugins.xml')
 @app.route('/')
 def get_plugins():
-    print(current_user)
     """Generate the 'plugins.xml' and html view from the DB."""
     if current_user.is_anonymous:
         plugins = Plugin.query.filter_by(public=True)
