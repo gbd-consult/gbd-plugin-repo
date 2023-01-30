@@ -5,6 +5,9 @@ from flask_login import LoginManager
 import logging
 import os
 
+from repo.rpc import HTTPAuthXMLRPCHandler
+
+
 app = Flask(__name__)
 if app.config['ENV'] == 'production':
     app.config.from_object('repo.config')
@@ -22,7 +25,11 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+rpc_handler = HTTPAuthXMLRPCHandler("rpc")
+rpc_handler.connect(app, "/rpc")
+
 from repo import models, plugins, auth
+
 
 # on a fresh DB run create_all
 from repo.helpers import dbIsPopulated, createSuperuser

@@ -2,7 +2,7 @@
 from repo.models import User, Plugin, Role
 from repo import login_manager, app, db
 from flask_login import current_user, login_user, logout_user, login_required
-from flask import redirect, url_for, request, flash, render_template, abort, current_app, session
+from flask import redirect, url_for, request, flash, render_template, abort
 from werkzeug.urls import url_parse
 
 
@@ -10,13 +10,16 @@ from werkzeug.urls import url_parse
 def load_user_from_header(request):
     auth = request.authorization
     if not auth:
-        return None # no basic auth provided, continue with normal auth
+        # no basic auth provided, continue with normal auth
+        return None
 
     user = User.query.filter_by(name=auth.username).first()
     if not user or not user.check_password(auth.password):
-        abort(401) # wrong basic auth provided deny access
+        # wrong basic auth provided deny access
+        abort(401)
 
-    return user # basic auth works
+    # basic auth works
+    return user
 
 
 @login_manager.user_loader

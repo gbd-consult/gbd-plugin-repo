@@ -47,7 +47,7 @@ def md5(file):
     return hash_md5.hexdigest()
 
 
-def newerVersion(a, b):
+def newer_version(a, b):
     """Return true if the version a is newer than b.
 
     Arguments:

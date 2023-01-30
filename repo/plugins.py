@@ -1,22 +1,32 @@
 """End points for Plugins."""
 import os
-from repo import app, db
+import io
+from repo import app, db, rpc_handler
 from flask import request, Response, render_template, \
     redirect, flash, abort, url_for, send_from_directory
 from flask_login import login_required, current_user
-from repo.helpers import readline_generator, md5, newerVersion
 from repo.models import Plugin, Role, User
+from repo.upload import plugin_upload
+from repo.rpc import RPCError
 from lxml import etree
-from zipfile import ZipFile
-from configparser import ConfigParser
-from tempfile import TemporaryDirectory
-import shutil
 from sqlalchemy import or_, and_
+
+plugin_ns = rpc_handler.namespace('plugin')
+
+
+@plugin_ns.register
+def upload(package):
+    """ XML RPC function to upload a QGIS plugin."""
+    package_file = io.BytesIO(package.data)
+    success, result = plugin_upload(current_user, package_file)
+    if success:
+        return result
+    else:
+        raise RPCError(result)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
-@login_required
-def upload_plugin():  # FIXME: This is very complex spaghetti code.
+def upload_plugin():
     """Upload a zip compressed QGIS plugin."""
     if not (current_user.superuser):
         abort(401)
@@ -24,6 +34,7 @@ def upload_plugin():  # FIXME: This is very complex spaghetti code.
         # Check if there is a file part
         if 'file' not in request.files:
             flash('no file part')
+            app.logger.info(request.files)
             return redirect(url_for('upload_plugin'))
         file = request.files['file']
 
@@ -37,104 +48,13 @@ def upload_plugin():  # FIXME: This is very complex spaghetti code.
             flash('wrong filetype')
             return redirect(url_for('upload_plugin'))
 
-        # Create a temp file for our zip
-        with TemporaryDirectory() as dir:
-            tmp_path = os.path.join(dir, file.filename)
-            file.save(tmp_path)
-            with open(tmp_path, 'rb') as f:
-                # Check if plugin is a duplicate
-                existing_plugin = Plugin.query.filter_by(
-                    md5_sum=md5(f)).first()
-                if existing_plugin:
-                    flash('uploaded plugin is a duplicate!')
-                    return redirect(url_for('upload_plugin'))
-
-                # Check if we can open the zip file
-                try:
-                    zf = ZipFile(f)
-                except:
-                    flash("broken zip file")
-                    return redirect(url_for('upload_plugin'))
-
-                # Check if the zip file contains a metadata.txt file
-                metadataFiles = list(filter(
-                    lambda x: x.endswith('/metadata.txt')
-                    or x == 'metadata.txt', zf.namelist()))
-                if not len(metadataFiles) == 1:
-                    flash("missing metadata.txt")
-                    return redirect(url_for('upload_plugin'))
-
-                # Try to read metadata.txt
-                try:
-                    metadata = zf.open(metadataFiles.pop())
-                    config = ConfigParser()
-                    config.read_file(readline_generator(metadata))
-
-                    name = config.get('general', 'name')
-                    version = config.get('general', 'version')
-                    description = config.get('general', 'description')
-                    qgis_min_version = config.get('general',
-                                                  'qgisMinimumVersion')
-                    qgis_max_version = config.get('general',
-                                                  'qgisMaximumVersion',
-                                                  fallback='3.99')
-                    author_name = config.get('general', 'author')
-                    repository = config.get('general',
-                                            'repository', fallback='')
-                    about = config.get('general', 'about', fallback='')
-
-                except:
-                    flash("invalid metadata.txt file")
-                    return redirect(url_for('upload_plugin'))
-
-                # Check if there already is a plugin with that name
-                old_plugin = Plugin.query.filter_by(
-                    file_name=file.filename).first()
-                if old_plugin and \
-                        not newerVersion(version, old_plugin.version):
-                    flash(
-                        'rejecting upload. \
-                        uploaded version of %s is older than existing one'
-                        % name)
-                    return redirect(url_for('upload_plugin'))
-
-                try:
-                    plugin_path = os.path.join(app.root_path, app.config['GBD_PLUGIN_PATH'], file.filename)
-                    shutil.move(tmp_path, plugin_path)
-                except:
-                    flash("copying of new plugin failed")
-                    return redirect(url_for('upload_plugin'))
-
-                if old_plugin:
-                    plugin = old_plugin
-                    app.logger.info('PLUGIN_UPDATED: %s(%s) to %s by user %s'
-                                    % (name, plugin.id,
-                                       version, current_user.name))
-                    msg = 'successfuly updated %s to Version %s' \
-                        % (name, version)
-                else:
-                    plugin = Plugin()
-                    app.logger.info('PLUGIN_CREATED: %s by user %s'
-                                    % (name, current_user.name))
-                    msg = 'successfuly uploaded %s' % name
-
-                plugin.name = name
-                plugin.version = version
-                plugin.description = description
-                plugin.qgis_min_version = qgis_min_version
-                plugin.qgis_max_version = qgis_max_version
-                plugin.author_name = author_name
-                plugin.md5_sum = md5(f)
-                plugin.file_name = file.filename
-                plugin.user_id = current_user.id
-                # optional
-                plugin.repository = repository
-                plugin.about = about
-
-                db.session.add(plugin)
-                db.session.commit()
-                flash(msg)
-
+        package_file = io.BytesIO(file.read())
+        
+        success, result = plugin_upload(current_user, package_file)
+        if success:
+            flash(f"uploaded {file.filename}")
+        else:
+            flash(result)
         return redirect(url_for('upload_plugin'))
     else:
         return render_template("upload.html")
@@ -212,6 +132,7 @@ def get_plugins():
         roles = Role.query.all()
         return render_template("plugins.html",
                                plugins=plugins, user=current_user, roles=roles)
+
 
 @app.route('/plugin/<int:plugin_id>/edit', methods=['POST'])
 def edit_plugin(plugin_id):
