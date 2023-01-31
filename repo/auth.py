@@ -172,7 +172,7 @@ def edit_user(user_id):
             if changed:
                 db.session.add(user)
                 db.session.commit()
-                flash("successfuly changed user: %s" % user.name)
+                flash(f"successfuly changed user: {user.name}")
                 return redirect(url_for("get_users"))
             else:
                 flash("nothing changed")

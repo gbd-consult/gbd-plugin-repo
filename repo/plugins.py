@@ -224,7 +224,7 @@ def edit_plugin(plugin_id):
     if changed:
         db.session.add(plugin)
         db.session.commit()
-        flash("successfuly changed plugin: %s" % plugin.name)
+        flash(f"successfuly changed plugin: {plugin.name}")
     else:
         flash("no changes were made")
 
