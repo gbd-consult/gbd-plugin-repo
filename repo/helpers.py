@@ -1,7 +1,9 @@
 """Helper functions."""
 import hashlib
-from repo.models import Plugin, User
+
 from sqlalchemy.exc import OperationalError
+
+from repo.models import Plugin, User
 
 
 def readline_generator(fp):
@@ -12,7 +14,7 @@ def readline_generator(fp):
         line = fp.readline().decode()
 
 
-def dbIsPopulated():
+def db_is_populated():
     """Check if our database is already populated."""
     try:
         Plugin.query.all()
@@ -21,13 +23,10 @@ def dbIsPopulated():
         return False
 
 
-def createSuperuser():
+def create_superuser():
     """Create a default superuser account."""
-    su = User(
-        name='admin',
-        superuser=True
-    )
-    su.set_password('admin')
+    su = User(name="admin", superuser=True)
+    su.set_password("admin")
     return su
 
 
@@ -58,8 +57,8 @@ def newer_version(a, b):
             version string b
 
     """
-    a_split = [int(x) for x in a.split('.')]
-    b_split = [int(x) for x in b.split('.')]
+    a_split = [int(x) for x in a.split(".")]
+    b_split = [int(x) for x in b.split(".")]
     a_split = a_split + [0] * (len(b_split) - len(a_split))
     b_split = b_split + [0] * (len(a_split) - len(b_split))
     for (a_value, b_value) in zip(a_split, b_split):

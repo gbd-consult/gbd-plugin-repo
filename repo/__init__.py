@@ -1,44 +1,43 @@
 """A small Flask app to serve our QGIS Plugin Repository."""
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
 import logging
 import os
 
+from flask import Flask
+from flask_login import LoginManager
+from flask_sqlalchemy import SQLAlchemy
+
 from repo.rpc import HTTPAuthXMLRPCHandler
 
-
 app = Flask(__name__)
-if app.config['ENV'] == 'production':
-    app.config.from_object('repo.config')
+if app.config["ENV"] == "production":
+    app.config.from_object("repo.config")
 else:
-    app.config.from_object('repo.config_dev')
+    app.config.from_object("repo.config_dev")
 
 # Setup logging with gunicorn
-if __name__ != '__main__':
-    gunicorn_logger = logging.getLogger('gunicorn.error')
+if __name__ != "__main__":
+    gunicorn_logger = logging.getLogger("gunicorn.error")
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
 
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+login_manager.login_view = "login"
 
 rpc_handler = HTTPAuthXMLRPCHandler("rpc")
 rpc_handler.connect(app, "/rpc")
 
-from repo import models, plugins, auth
-
+from repo import auth, models, plugins
 
 # on a fresh DB run create_all
-from repo.helpers import dbIsPopulated, createSuperuser
+from repo.helpers import create_superuser, db_is_populated
 
-if not dbIsPopulated():
+if not db_is_populated():
     print("no database found, generating new one")
-    if not os.path.isdir(app.config['GBD_PLUGIN_PATH']):
-        os.makedirs(app.config['GBD_PLUGIN_PATH'])
+    if not os.path.isdir(app.config["GBD_PLUGIN_PATH"]):
+        os.makedirs(app.config["GBD_PLUGIN_PATH"])
     db.create_all()
-    su = createSuperuser()
+    su = create_superuser()
     db.session.add(su)
     db.session.commit()
