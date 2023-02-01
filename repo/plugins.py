@@ -1,6 +1,6 @@
 """End points for Plugins."""
 import io
-import os
+from pathlib import Path
 
 from flask import (
     Response,
@@ -14,7 +14,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from lxml import etree
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 
 from repo import app, db, rpc_handler
 from repo.helpers import newer_version
@@ -33,6 +33,7 @@ def upload(package):
 
     package_file = io.BytesIO(package.data)
     success, result = plugin_upload(current_user, package_file)
+
     if success:
         return result
     else:
@@ -64,8 +65,8 @@ def upload_plugin():
             return redirect(url_for("upload_plugin"))
 
         package_file = io.BytesIO(file.read())
-
         success, result = plugin_upload(current_user, package_file)
+
         if success:
             flash(f"uploaded {file.filename}")
         else:
@@ -82,12 +83,14 @@ def delete_plugin(plugin_id):
     p = Plugin.query.get(plugin_id)
     if not p:
         return abort(404)
-    if not (current_user.superuser or current_user.id == p.user_id):
+    if not (current_user.superuser):
         return abort(401)
     db.session.delete(p)
     db.session.commit()
-    full_path = os.path.join(app.root_path, app.config["GBD_PLUGIN_PATH"], p.file_name)
-    os.remove(full_path)
+    full_path = (
+        Path(app.root_path) / Path(app.config["GBD_PLUGIN_PATH"]) / Path(p.file_name)
+    )
+    full_path.unlink()
     app.logger.info(f"PLUGIN_DELETED: {p.name}({p.id}) by user {current_user.name}")
     return redirect(url_for("get_plugins"))
 
@@ -108,7 +111,6 @@ def get_plugins():
                 or_(
                     User.id == current_user.id,
                     Plugin.public is True,
-                    Plugin.user_id == current_user.id,
                 )
             )
             .all()
@@ -172,33 +174,32 @@ def edit_plugin(plugin_id):
     if not plugin:
         return abort(404)
 
-    if not (current_user.superuser or plugin.user.id == current_user.id):
+    if not current_user.superuser:
         return abort(401)
 
     changed = False
-    if current_user.superuser:  # only superuser can assign roles at the moment
-        roles = Role.query.all()
-        for role in roles:
-            should_have_access = request.form.get(f"role_{role.id}") == "on"
-            has_access = role in plugin.roles
-            if has_access and not should_have_access:
-                plugin.roles.remove(role)
-                changed = True
-                app.logger.info(
-                    (
-                        f"PLUGIN_ROLE_REMOVED: {role.name} added to "
-                        f"plugin {plugin.name}({plugin.id}) by {current_user.name}"
-                    )
+    roles = Role.query.all()
+    for role in roles:
+        should_have_access = request.form.get(f"role_{role.id}") == "on"
+        has_access = role in plugin.roles
+        if has_access and not should_have_access:
+            plugin.roles.remove(role)
+            changed = True
+            app.logger.info(
+                (
+                    f"PLUGIN_ROLE_REMOVED: {role.name} added to "
+                    f"plugin {plugin.name}({plugin.id}) by {current_user.name}"
                 )
-            elif should_have_access and not has_access:
-                app.logger.info(
-                    (
-                        f"PLUGIN_ROLE_ADDED: {role.name} added to "
-                        "plugin {plugin.name}({plugin.id}) by {current_user.name}"
-                    )
+            )
+        elif should_have_access and not has_access:
+            app.logger.info(
+                (
+                    f"PLUGIN_ROLE_ADDED: {role.name} added to "
+                    "plugin {plugin.name}({plugin.id}) by {current_user.name}"
                 )
-                plugin.roles.append(role)
-                changed = True
+            )
+            plugin.roles.append(role)
+            changed = True
 
     # uploader and superuser can both set a plugins visibility to public
     should_be_public = request.form.get("public") == "on"
@@ -233,27 +234,19 @@ def edit_plugin(plugin_id):
 
 @app.route("/download/<string:filename>")
 def download_plugin(filename):
-    if current_user.is_anonymous:
-        plugin = Plugin.query.filter(
-            and_(Plugin.file_name == filename, Plugin.public is True)
-        ).first()
-    elif current_user.superuser:
-        plugin = Plugin.query.filter(Plugin.file_name == filename).first()
-    else:
-        plugin = (
-            Plugin.query.join(Plugin.roles, isouter=True)
-            .join(Role.users, isouter=True)
-            .filter(
-                and_(
-                    Plugin.file_name == filename,
-                    or_(Plugin.public is True, User.id == current_user.id),
-                )
-            )
-            .first()
-        )
+    plugin = Plugin.query.filter(Plugin.file_name == filename).first()
+    full_path = Path(app.root_path) / app.config["GBD_PLUGIN_PATH"]
 
     if not plugin:
         abort(404)
+    else:
+        if plugin.public or (
+            current_user.is_authenticated
+            and (
+                current_user.superuser
+                or (set(current_user.roles).intersection(set(plugin.roles)))
+            )
+        ):
+            return send_from_directory(full_path, plugin.file_name)
 
-    full_path = os.path.join(app.root_path, app.config["GBD_PLUGIN_PATH"])
-    return send_from_directory(full_path, plugin.file_name)
+        abort(401)

@@ -44,7 +44,7 @@
           </div>
 
 
-          {% if plugin.user_id == user.id or user.superuser %}
+          {% if user.superuser %}
             <hr>
             <div class="row">
               <div class="col-md-6">
@@ -107,10 +107,12 @@
       <div class="text-center">
         <i class="fas fa-user-astronaut fa-5x"></i>
         <p></p>
+        {% if user.superuser %}
         <a href="{{ url_for('upload_plugin') }}" class="btn btn-info">
           <i class="fas fa-file-upload"></i>
           Upload a Plugin
         </a>
+        {% endif %}
       </div>
   {% endif %}
 {% endblock %}
