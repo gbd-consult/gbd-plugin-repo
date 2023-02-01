@@ -121,42 +121,15 @@ def get_plugins():
         plugins = [
             p
             for p in plugins
-            if not newer_version(p.qgis_min_version, version)
-            and not newer_version(version, p.qgis_max_version)
+            if not newer_version(p.qgisminimumversion, version)
+            and not newer_version(version, p.qgismaximumversion)
         ]
 
     if request.path.endswith("plugins.xml"):
         plugin_root = etree.Element("plugins")
 
         for p in plugins:
-            plugin_element = etree.Element(
-                "pyqgis_plugin", version=p.version, name=p.name
-            )
-
-            version = etree.SubElement(plugin_element, "version")
-            version.text = p.version
-            description = etree.SubElement(plugin_element, "description")
-            description.text = p.description
-            author_name = etree.SubElement(plugin_element, "author_name")
-            author_name.text = p.author_name
-            file_name = etree.SubElement(plugin_element, "file_name")
-            file_name.text = p.file_name
-            download_url = etree.SubElement(plugin_element, "download_url")
-            download_url.text = url_for(
-                "download_plugin", filename=p.file_name, _external=True
-            )
-            qgis_minimum_version = etree.SubElement(
-                plugin_element, "qgis_minimum_version"
-            )
-            qgis_minimum_version.text = p.qgis_min_version
-            qgis_maximum_version = etree.SubElement(
-                plugin_element, "qgis_maximum_version"
-            )
-            qgis_maximum_version.text = p.qgis_max_version
-            md5_sum = etree.SubElement(plugin_element, "md5_sum")
-            md5_sum.text = p.md5_sum
-
-            plugin_root.append(plugin_element)
+            plugin_root.append(p.to_xml())
 
         return Response(etree.tostring(plugin_root), mimetype="text/xml")
     else:
@@ -247,6 +220,9 @@ def download_plugin(filename):
                 or (set(current_user.roles).intersection(set(plugin.roles)))
             )
         ):
+            plugin.downloads += 1
+            db.session.add(plugin)
+            db.session.commit()
             return send_from_directory(full_path, plugin.file_name)
 
         abort(401)

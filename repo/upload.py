@@ -4,9 +4,12 @@ from configparser import Error as ConfigParserError
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.sql import sqltypes
+
 from repo import app, db
 from repo.helpers import md5, newer_version, readline_generator
-from repo.models import Plugin, User
+from repo.models import Plugin, Tag, User
 
 
 def plugin_upload(user: User, package: io.BytesIO):
@@ -35,14 +38,9 @@ def plugin_upload(user: User, package: io.BytesIO):
         config = ConfigParser()
         config.read_file(readline_generator(metadata))
 
-        name = config.get("general", "name")
-        version = config.get("general", "version")
-        description = config.get("general", "description")
-        qgis_min_version = config.get("general", "qgisMinimumVersion")
-        qgis_max_version = config.get("general", "qgisMaximumVersion", fallback="3.99")
-        author_name = config.get("general", "author")
-        repository = config.get("general", "repository", fallback="")
-        about = config.get("general", "about", fallback="")
+        metadata_dict = dict(config.items("general"))
+        name = metadata_dict.get("name")
+        version = metadata_dict.get("version")
 
     except ConfigParserError:
         return (False, "invalid metadata.txt file")
@@ -78,30 +76,41 @@ def plugin_upload(user: User, package: io.BytesIO):
     # modify plugin in db
     if old_plugin:
         plugin = old_plugin
-        app.logger.info(
-            (
-                f"PLUGIN_UPDATED: {name}({plugin.id}) to "
-                f"{version} by user {user.name}"
-            )
-        )
+        mode = "UPDATED"
     else:
         plugin = Plugin()
-        app.logger.info(f"PLUGIN_CREATED: {name} by user {user.name}")
+        mode = "CREATED"
 
-    plugin.name = name
-    plugin.version = version
-    plugin.description = description
-    plugin.qgis_min_version = qgis_min_version
-    plugin.qgis_max_version = qgis_max_version
-    plugin.author_name = author_name
+    if "tags" in metadata_dict.keys():
+        tag_name_list = metadata_dict.get("tags").split(",")
+        tag_list = []
+        for tag_name in tag_name_list:
+            tag = Tag.query.filter(Tag.name == tag_name).first()
+            if not tag:
+                tag = Tag(name=tag_name)
+            tag_list.append(tag)
+        db.session.add_all(tag_list)
+        db.session.commit()
+        metadata_dict.update({"tags": tag_list})
+
+    for key, value in metadata_dict.items():
+        if (
+            key in [c.name for c in plugin.__table__.columns]
+            and isinstance(plugin.__table__.c[key].type, sqltypes.Boolean)
+            and not isinstance(value, bool)
+        ):
+            value = value == "True"
+        setattr(plugin, key, value)
+
     plugin.md5_sum = md5(package)
     plugin.file_name = package_name
     plugin.user_id = user.id
-    # optional
-    plugin.repository = repository
-    plugin.about = about
 
-    db.session.add(plugin)
-    db.session.commit()
+    try:
+        db.session.add(plugin)
+        db.session.commit()
+    except SQLAlchemyError:
+        return (False, "error creating plugin. maybe a metadata value is missing?")
 
+    app.logger.info(f"PLUGIN_{mode}: {name} by user {user.name}")
     return (True, (plugin.id, plugin.version))

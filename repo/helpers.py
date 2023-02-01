@@ -30,6 +30,21 @@ def create_superuser():
     return su
 
 
+def add_vote(current_avg: float, current_votes: int, vote: int):
+    """Calculate the new averate rating.
+
+    Arguments:
+    ---------
+        current_avg: float
+            the current average rating.
+        current_votes: int
+            the current number of votes.
+        vote: int
+            the vote to be added.
+    """
+    return (current_avg * current_votes + vote) / (current_votes + 1)
+
+
 def md5(file):
     """Return the md5 hash of a file.
 
@@ -46,7 +61,7 @@ def md5(file):
     return hash_md5.hexdigest()
 
 
-def newer_version(a, b):
+def newer_version(a: str, b: str):
     """Return true if the version a is newer than b.
 
     Arguments:
