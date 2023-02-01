@@ -69,7 +69,9 @@ def plugin_upload(user: User, package: io.BytesIO):
             / Path(package_name)
         )
         with open(plugin_path, "wb") as out_file:
+            package.seek(0)
             out_file.write(package.read())
+
     except IOError:
         return (False, "writing of plugin failed")
 
