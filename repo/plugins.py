@@ -139,7 +139,21 @@ def get_plugins():
         )
 
 
+@app.route("/plugin/<int:plugin_id>")
+def get_plugin(plugin_id):
+    plugin = Plugin.query.get(plugin_id)
+    if plugin:
+        if plugin.has_access(current_user):
+            return render_template(
+                "plugin.html", plugin=plugin, user=current_user, roles=plugin.roles
+            )
+        else:
+            abort(403)
+    abort(404)
+
+
 @app.route("/plugin/<int:plugin_id>/edit", methods=["POST"])
+@login_required
 def edit_plugin(plugin_id):
 
     plugin = Plugin.query.filter_by(id=plugin_id).first()
@@ -148,7 +162,7 @@ def edit_plugin(plugin_id):
         return abort(404)
 
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
 
     changed = False
     roles = Role.query.all()
@@ -202,7 +216,7 @@ def edit_plugin(plugin_id):
     else:
         flash("no changes were made")
 
-    return redirect(url_for("get_plugins"))
+    return redirect(url_for("get_plugin", plugin_id=plugin.id))
 
 
 @app.route("/download/<string:filename>")
@@ -210,19 +224,11 @@ def download_plugin(filename):
     plugin = Plugin.query.filter(Plugin.file_name == filename).first()
     full_path = Path(app.root_path) / app.config["GBD_PLUGIN_PATH"]
 
-    if not plugin:
-        abort(404)
-    else:
-        if plugin.public or (
-            current_user.is_authenticated
-            and (
-                current_user.superuser
-                or (set(current_user.roles).intersection(set(plugin.roles)))
-            )
-        ):
+    if plugin:
+        if plugin.has_access(current_user):
             plugin.downloads += 1
             db.session.add(plugin)
             db.session.commit()
             return send_from_directory(full_path, plugin.file_name)
-
-        abort(401)
+        else:
+            abort(403)

@@ -112,6 +112,13 @@ class Plugin(db.Model):
 
         return plugin_element
 
+    def has_access(self, user):
+        return (
+            self.public
+            or (user.is_authenticated and user.superuser)
+            or (user.is_authenticated and set(self.roles).intersection(set(user.roles)))
+        )
+
 
 user_role_association = db.Table(
     "user_role",

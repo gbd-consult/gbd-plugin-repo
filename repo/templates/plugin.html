@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block body %}
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">{{ plugin.name }}</h5>
+      <p class="card-text font-weight-bold">{{ plugin.description }}</p>
+      <hr/>
+      {% if plugin.about %}
+        <p class="card-text">{{ plugin.about }}</p>
+      {% endif %}
+      <hr/>
+      <table class="table table-borderless table-sm">
+        <tbody>
+          <tr>
+            <td>Version</td>
+            <td>{{ plugin.version }}</td>
+          </tr>
+          <tr>
+            <td>letztes Update</td>
+            <td>{{ plugin.update_date.strftime('%d.%m.%Y') }}</td>
+          </tr>
+          <tr>
+            <td>hochgeladen von</td>
+            <td>{{ plugin.user.name }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="text-right">
+        <div class="btn-group" role="group">
+          {% if plugin.repository %}
+            <a href="{{ plugin.repository}}" class="btn btn-info">
+              <i class="fab fa-github-alt"></i>
+              Repository
+            </a>
+          {% endif %}
+          <a href="{{ url_for('download_plugin', filename=plugin.file_name) }}"
+            class="btn btn-primary">
+            <i class="fas fa-download"></i>
+            Download
+          </a>
+        </div>
+      </div>
+
+
+      {% if user.superuser %}
+        <hr>
+        <div class="row">
+          <div class="col-md-6">
+            <a href="{{ url_for('delete_plugin', plugin_id = plugin.id)}}"
+              class="btn btn-sm btn-danger">
+              <i class="fas fa-trash"></i>
+              Delete Plugin
+            </a>
+          </div>
+            <div class="col-md-6 text-right">
+              <button class="btn btn-sm btn-warning"
+                data-toggle="collapse" data-target="#collapse_{{plugin.id}}"
+                aria-expanded="false" aria-controls="collapse_{{plugin.id}}"
+              >
+                <i class="fas fa-lock"></i>
+                Permissions
+              </button>
+            </div>
+        </div>
+
+        <div class="collapse" id="collapse_{{plugin.id}}">
+          <div class="card card-body">
+              <form method="post" enctype="multipart/form-data" action="{{url_for('edit_plugin', plugin_id=plugin.id)}}">
+
+                <p>If a plugin is set to "public" it is visible to all visitors</p>
+                <div class="form-group">
+                  <div class="form-check">
+                    <input type="checkbox" name="public" id="public" class="form-check-input"
+                      {{'checked="checked"' if plugin and plugin.public else '' }} />
+                    <label for="public">public</label>
+                  </div>
+                </div>
+
+                {% if user.superuser %}
+                  <p>Users with the following roles have <b>read access</b>:</p>
+                  <div class="form-group">
+                    {% for role in roles %}
+                      <div class="form-check">
+                        <input type="checkbox" name="role_{{role.id}}" id="role_{{role.id}}" class="form-check-input"
+                          {{'checked="checked"' if plugin and role in plugin.roles else '' }}>
+                        <label for="role_{{role.id}}">{{role.name}}</label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary">Update roles</button>
+
+              </form>
+          </div>
+        </div>
+      {% endif %}
+
+
+    </div>
+  </div>
+{% endblock %}
