@@ -51,6 +51,18 @@ def plugin_upload(user: User, package: io.BytesIO):
     else:
         package_name = f"{name.lower().replace(' ', '_').replace('-', '_')}.zip"
 
+    # Save icon if any
+    if "icon" in metadata_dict.keys():
+        zip_icon_path = Path(package_name).stem / Path(metadata_dict.get("icon"))
+        icon_path = (
+            Path(app.config["GBD_ICON_PATH"])
+            / Path(package_name).stem
+            / Path(metadata_dict.get("icon")).suffix
+        )
+        app.logger.info(icon_path)
+        with open(icon_path, "wb") as icon_file:
+            icon_file.write(zip_file.read(str(zip_icon_path)))
+
     # close zip file:
     zip_file.close()
 
