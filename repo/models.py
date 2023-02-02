@@ -1,6 +1,7 @@
 """Database Models."""
 from datetime import datetime
 
+from flask import url_for
 from flask_login import UserMixin
 from lxml import etree
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -80,19 +81,34 @@ class Plugin(db.Model):
             "pyqgis_plugin", version=self.version, name=self.name
         )
         for c_name in [c.name for c in self.__table__.columns]:
-            if c_name == "qgisminimumversion":
+            if c_name == "plugin_dependencies":
+                element_name = "external_dependencies"
+            elif c_name == "qgisminimumversion":
                 element_name = "qgis_minimum_version"
             elif c_name == "qgismaximumversion":
                 element_name = "qgis_maximum_version"
+            elif c_name == "user_id":
+                element_name = "uploaded_by"
             else:
                 element_name = c_name
 
             sub_element = etree.SubElement(plugin_element, element_name)
 
-            if c_name == "user_id":
+            if c_name == "plugin_dependencies" and not self.plugin_dependencies:
+                continue
+            elif c_name == "user_id":
                 sub_element.text = self.user.name
             else:
                 sub_element.text = str(getattr(self, c_name))
+
+        # custom
+        url_element = etree.SubElement(plugin_element, "download_url")
+        url_element.text = url_for(
+            "download_plugin", filename=self.file_name, _external=True
+        )
+
+        tags_element = etree.SubElement(plugin_element, "tags")
+        tags_element.text = ",".join([str(t) for t in self.tags])
 
         return plugin_element
 
@@ -139,4 +155,4 @@ class Tag(db.Model):
 
     def __repr__(self):
         """Show a Representation of the Tag."""
-        return f"#{self.name}"
+        return f"{self.name}"
