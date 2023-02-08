@@ -3,7 +3,7 @@ import os
 # Path where the Plugins are stored
 GBD_PLUGIN_PATH = os.getenv("GBD_PLUGIN_PATH", "/data/dl")
 
-GBD_ICON_PATH = os.getenv("GBD_PLUGIN_PATH", "/data/icons/")
+GBD_ICON_PATH = os.getenv("GBD_ICON_PATH", "/data/icons/")
 
 # ROOT URI for Plugin Download
 # GBD_PLUGIN_ROOT = os.getenv("GBD_PLUGIN_ROOT", "http://localhost:8234/dl")
