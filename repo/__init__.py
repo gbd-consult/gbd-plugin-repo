@@ -37,6 +37,8 @@ if not db_is_populated():
     print("no database found, generating new one")
     if not os.path.isdir(app.config["GBD_PLUGIN_PATH"]):
         os.makedirs(app.config["GBD_PLUGIN_PATH"])
+    if not os.path.isdir(app.config["GBD_ICON_PATH"]):
+        os.makedirs(app.config["GBD_ICON_PATH"])
     db.create_all()
     su = create_superuser()
     db.session.add(su)
