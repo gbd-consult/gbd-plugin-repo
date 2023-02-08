@@ -7,7 +7,7 @@ Eine kleine Flask Anwendung, die unser QGIS Plugin Repository unter https://plug
 Registrierte Nutzer:innen können Plugins über das Webinterface hochladen.
 Es wird nur die neuste Version eines jeden Plugins behalten. Nutzer:innen müssen also aufpassen, was sie hochladen.
 
-## Development
+## Development without Docker
 To run a development version of the app first clone the repository.
 ```
 git clone https://github.com/gbd-consult/gbd-plugin-repo.git
@@ -23,36 +23,16 @@ FLASK_APP=repo FLASK_ENV=development flask run
 ```
 You can now brose to `localhost:5000` and login with the credentials: `admin/admin`.
 
-## Docker Image
+## Docker
 
-To Build:
-```
-docker-compose build
-```
-Then create a docker-compose.yml from the default.
+Create a docker-compose.yml from the default.
 ```
 cp docker-compose_default.yml docker-compose.yml
 ```
-To run the image:
+Build and run the image using
 ```
-docker-compose up -d
+docker-compose up --build
 ```
 Browse to localhost:8234
 
-## Deployment
-
-First build the Docker image.
-```
-docker-compose build
-```
-Then create a docker-compose.yml from the default.
-```
-cp docker-compose_default.yml docker-compose.yml
-```
-Open it and uncomment the environment variables.
-Change them for your Setup.
-Finally you can run the app:
-```
-docker-compose up -d
-```
 Enjoy! 🛰️
