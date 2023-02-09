@@ -119,8 +119,11 @@ def plugin_upload(user: User, package: io.BytesIO):
     try:
         db.session.add(plugin)
         db.session.commit()
-    except SQLAlchemyError:
-        return (False, "error creating plugin. maybe a metadata value is missing?")
+    except SQLAlchemyError as e:
+        app.logger.warning(e.statement)
+        app.logger.warning(e.params)
+        app.logger.warning(e.orig)
+        return (False, "Error creating plugin. See logs for details.")
 
     app.logger.info(f"PLUGIN_{mode}: {name} by user {user.name}")
     return (True, (plugin.id, plugin.version))

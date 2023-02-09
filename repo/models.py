@@ -46,7 +46,7 @@ class Plugin(db.Model):
     # values from metadata.txt
     name = db.Column(db.String(120), nullable=False)
     qgisminimumversion = db.Column(db.String(10), nullable=False)
-    qgismaximumversion = db.Column(db.String(10), nullable=False)
+    qgismaximumversion = db.Column(db.String(10), nullable=False, default="3.99")
     description = db.Column(db.String(200), nullable=False)
     about = db.Column(db.String(), nullable=False)
     version = db.Column(db.String(10), nullable=False)
