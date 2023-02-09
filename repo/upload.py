@@ -4,6 +4,7 @@ from configparser import Error as ConfigParserError
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
+from flask import url_for
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import sqltypes
 
@@ -54,13 +55,11 @@ def plugin_upload(user: User, package: io.BytesIO):
     # Save icon if any
     if "icon" in metadata_dict.keys():
         zip_icon_path = Path(package_name).stem / Path(metadata_dict.get("icon"))
-        icon_path = (
-            Path(app.config["GBD_ICON_PATH"])
-            / f"{Path(package_name).stem}{Path(metadata_dict.get('icon')).suffix}"
-        )
-        app.logger.info(icon_path)
+        filename = f"{Path(package_name).stem}{Path(metadata_dict.get('icon')).suffix}"
+        icon_path = Path(app.config["GBD_ICON_PATH"]) / filename
         with open(icon_path, "wb") as icon_file:
             icon_file.write(zip_file.read(str(zip_icon_path)))
+        metadata_dict.update({"icon": url_for("get_icon", filename=filename)})
 
     # close zip file:
     zip_file.close()

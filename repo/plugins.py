@@ -235,14 +235,13 @@ def download_plugin(filename):
     abort(404)
 
 
-@app.route("/icons/<int:plugin_id>")
-def get_icon(plugin_id):
-    plugin = Plugin.query.get(plugin_id)
+@app.route("/icons/<string:filename>")
+def get_icon(filename):
+    plugin = Plugin.query.filter(Plugin.icon == request.path).first()
     if plugin:
         if plugin.has_access(current_user):
             full_path = Path(app.root_path) / app.config["GBD_ICON_PATH"]
-            icon_path = f"{Path(Path(plugin.file_name).stem)}{Path(plugin.icon).suffix}"
-            return send_from_directory(full_path, icon_path)
+            return send_from_directory(full_path, filename)
         else:
             abort(403)
     abort(404)
