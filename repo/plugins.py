@@ -14,10 +14,10 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from lxml import etree
+from packaging import version
 from sqlalchemy import or_
 
 from repo import app, db, rpc_handler
-from repo.helpers import newer_version
 from repo.models import Plugin, Role, User
 from repo.rpc import RPCError
 from repo.upload import plugin_upload
@@ -117,12 +117,12 @@ def get_plugins():
         )
 
     if request.args.get("qgis"):
-        version = request.args.get("qgis")
+        version_arg = request.args.get("qgis")
         plugins = [
             p
             for p in plugins
-            if not newer_version(p.qgisminimumversion, version)
-            and not newer_version(version, p.qgismaximumversion)
+            if version.parse(p.qgisminimumversion) <= version.parse(version_arg)
+            and version.parse(p.qgismaximumversion) >= version.parse(version_arg)
         ]
 
     if request.path.endswith("plugins.xml"):

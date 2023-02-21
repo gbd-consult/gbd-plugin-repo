@@ -5,11 +5,12 @@ from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
 from flask import url_for
+from packaging import version
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import sqltypes
 
 from repo import app, db
-from repo.helpers import md5, newer_version, readline_generator
+from repo.helpers import md5, readline_generator
 from repo.models import Plugin, Tag, User
 
 
@@ -41,7 +42,7 @@ def plugin_upload(user: User, package: io.BytesIO):
 
         metadata_dict = dict(config.items("general"))
         name = metadata_dict.get("name")
-        version = metadata_dict.get("version")
+        plugin_version = metadata_dict.get("version")
 
     except ConfigParserError:
         return (False, "invalid metadata.txt file")
@@ -66,8 +67,13 @@ def plugin_upload(user: User, package: io.BytesIO):
 
     # Check if there already is a plugin with that name
     old_plugin = Plugin.query.filter_by(file_name=package_name).first()
-    if old_plugin and not newer_version(version, old_plugin.version):
-        return (False, f"There already exists a more recent verion of {package_name}")
+    if old_plugin and version.parse(old_plugin.version) >= version.parse(
+        plugin_version
+    ):
+        return (
+            False,
+            f"There already exist a version of the plugin {package_name} that is the same or newer.",
+        )
 
     # Write package to disk
     try:

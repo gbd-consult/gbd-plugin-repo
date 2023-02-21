@@ -5,4 +5,5 @@ flask_login
 lxml
 configparser
 gunicorn
+packaging
 Flask-XML-RPC-RE
