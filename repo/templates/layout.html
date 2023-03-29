@@ -51,7 +51,7 @@
           </a>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('logout') }}">
-              <i class="fas fa-sign-out-alt"></i>
+              <i class="bi-door-closed-fill"></i>
               Logout
             </a>
           </div>
@@ -59,7 +59,7 @@
         {% else %}
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('login')}}">
-            <i class="fas fa-sign-in-alt"></i>
+            <i class="bi-door-open-fill"></i>
             Login
           </a>
         </li>
@@ -92,7 +92,7 @@
   <script src="{{ url_for('static', filename='bootstrap/4.4.1/js/bootstrap.min.js') }}"
     integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
     crossorigin="anonymous"></script>
-  <script src="https://kit.fontawesome.com/7535f618cd.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='font/bootstrap-icons.css') }}">
   {% block script %}
   {% endblock %}
 </body>

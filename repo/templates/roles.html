@@ -3,7 +3,7 @@
 <div style="padding-bottom: 15px">
   <a href="{{url_for('add_role') }}">
     <button type="button" class="btn btn-primary">
-      <i class="fas fa-user-plus"></i>
+      <i class="bi-person-plus-fill"></i>
       add Role
     </button>
   </a>
@@ -26,11 +26,11 @@
         <div class="text-right">
           <div class="btn-group" role="group">
             <a class="btn btn-sm btn-info" href="{{ url_for('edit_role', role_id = role.id) }}">
-              <i class="fas fa-user-edit"></i>
+              <i class="bi-person-fill-gear"></i>
               edit
             </a>
             <a class="btn btn-sm btn-danger" href="{{ url_for('delete_role', role_id = role.id) }}">
-              <i class="fas fa-trash-alt"></i>
+              <i class="bi-person-fill-x"></i>
               delete
             </a>
           </div>

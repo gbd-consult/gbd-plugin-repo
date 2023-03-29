@@ -1,39 +1,39 @@
 {% extends "layout.html" %}
 {% block body %}
-  {% if plugins %}
-    <table class="table plugins">
-    <thead>
-      <tr>
-        <th scope="col">Plugin</th>
-        <th scope="col">Nutzer</th>
-        <th scope="col">Version</th>
-        <th scope="col">Zuletzt geändert</th>
-        <th scope="col">Downloads</th>
-      </tr>
-    </thead>
-    <tbody>
+{% if plugins %}
+<table class="table plugins">
+  <thead>
+    <tr>
+      <th scope="col">Plugin</th>
+      <th scope="col">Nutzer</th>
+      <th scope="col">Version</th>
+      <th scope="col">Zuletzt geändert</th>
+      <th scope="col">Downloads</th>
+    </tr>
+  </thead>
+  <tbody>
     {% for plugin in plugins %}
-      <tr>
-        <td><a href="{{ url_for('get_plugin',plugin_id=plugin.id)}}">{{ plugin.name }}</a></td>
-        <td>{{ plugin.user.name }}</td>
-        <td>{{ plugin.version }}</td>
-        <td>{{ plugin.update_date.strftime('%d.%m.%Y') }}</td>
-        <td>{{ plugin.downloads }}</td>
-      </tr>
+    <tr>
+      <td><a href="{{ url_for('get_plugin',plugin_id=plugin.id)}}">{{ plugin.name }}</a></td>
+      <td>{{ plugin.user.name }}</td>
+      <td>{{ plugin.version }}</td>
+      <td>{{ plugin.update_date.strftime('%d.%m.%Y') }}</td>
+      <td>{{ plugin.downloads }}</td>
+    </tr>
     {% endfor %}
-    </tbody>
-    </table>
-  {% else %}
-      <p>There are no plugins here. Nothing but empty space.</p>
-      <div class="text-center">
-        <i class="fas fa-user-astronaut fa-5x"></i>
-        <p></p>
-        {% if user.superuser %}
-        <a href="{{ url_for('upload_plugin') }}" class="btn btn-info">
-          <i class="fas fa-file-upload"></i>
-          Upload a Plugin
-        </a>
-        {% endif %}
-      </div>
+  </tbody>
+</table>
+{% else %}
+<p>There are no plugins here. Nothing but empty space.</p>
+<div class="text-center">
+  <i class="bi-rocket-takeoff" style="font-size: 5rem"></i>
+  <p></p>
+  {% if user.superuser %}
+  <a href="{{ url_for('upload_plugin') }}" class="btn btn-info">
+    <i class="bi-upload"></i>
+    Upload a Plugin
+  </a>
   {% endif %}
+</div>
+{% endif %}
 {% endblock %}
