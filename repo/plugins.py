@@ -142,10 +142,11 @@ def get_plugins():
 @app.route("/plugin/<int:plugin_id>")
 def get_plugin(plugin_id):
     plugin = Plugin.query.get(plugin_id)
+    roles = Role.query.all()
     if plugin:
         if plugin.has_access(current_user):
             return render_template(
-                "plugin.html", plugin=plugin, user=current_user, roles=plugin.roles
+                "plugin.html", plugin=plugin, user=current_user, roles=roles
             )
         else:
             abort(403)
@@ -155,7 +156,6 @@ def get_plugin(plugin_id):
 @app.route("/plugin/<int:plugin_id>/edit", methods=["POST"])
 @login_required
 def edit_plugin(plugin_id):
-
     plugin = Plugin.query.filter_by(id=plugin_id).first()
 
     if not plugin:
@@ -174,15 +174,15 @@ def edit_plugin(plugin_id):
             changed = True
             app.logger.info(
                 (
-                    f"PLUGIN_ROLE_REMOVED: {role.name} added to "
+                    f"PLUGIN_ROLE_REMOVED: {role.name} lost access to "
                     f"plugin {plugin.name}({plugin.id}) by {current_user.name}"
                 )
             )
         elif should_have_access and not has_access:
             app.logger.info(
                 (
-                    f"PLUGIN_ROLE_ADDED: {role.name} added to "
-                    "plugin {plugin.name}({plugin.id}) by {current_user.name}"
+                    f"PLUGIN_ROLE_ADDED: {role.name} gained access to "
+                    f"plugin {plugin.name}({plugin.id}) by {current_user.name}"
                 )
             )
             plugin.roles.append(role)
