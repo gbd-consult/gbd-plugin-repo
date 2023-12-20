@@ -9,10 +9,10 @@ from flask_sqlalchemy import SQLAlchemy
 from repo.rpc import HTTPAuthXMLRPCHandler
 
 app = Flask(__name__)
-if app.config["ENV"] == "production":
-    app.config.from_object("repo.config")
-else:
+if app.config["DEBUG"]:
     app.config.from_object("repo.config_dev")
+else:
+    app.config.from_object("repo.config")
 
 # Setup logging with gunicorn
 if __name__ != "__main__":
@@ -29,7 +29,6 @@ rpc_handler = HTTPAuthXMLRPCHandler("rpc")
 rpc_handler.connect(app, "/rpc")
 
 from repo import auth, models, plugins
-
 # on a fresh DB run create_all
 from repo.helpers import create_superuser, db_is_populated
 
