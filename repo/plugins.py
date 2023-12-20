@@ -2,16 +2,8 @@
 import io
 from pathlib import Path
 
-from flask import (
-    Response,
-    abort,
-    flash,
-    redirect,
-    render_template,
-    request,
-    send_from_directory,
-    url_for,
-)
+from flask import (Response, abort, flash, redirect, render_template, request,
+                   send_from_directory, url_for)
 from flask_login import current_user, login_required
 from lxml import etree
 from packaging import version
@@ -100,7 +92,7 @@ def delete_plugin(plugin_id):
 def get_plugins():
     """Generate the 'plugins.xml' and html view from the DB."""
     if current_user.is_anonymous:
-        plugins = Plugin.query.filter_by(public=True)
+        plugins = Plugin.query.filter_by(public=True).all()
     elif current_user.superuser:
         plugins = Plugin.query.all()
     else:
@@ -110,7 +102,7 @@ def get_plugins():
             .filter(
                 or_(
                     User.id == current_user.id,
-                    Plugin.public is True,
+                    Plugin.public,
                 )
             )
             .all()
@@ -174,7 +166,7 @@ def edit_plugin(plugin_id):
             changed = True
             app.logger.info(
                 (
-                    f"PLUGIN_ROLE_REMOVED: {role.name} lost access to "
+                    f"PLUGIN_ROLE_REMOVED: {role.name} lost access tow  "
                     f"plugin {plugin.name}({plugin.id}) by {current_user.name}"
                 )
             )
