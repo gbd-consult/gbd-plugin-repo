@@ -63,7 +63,7 @@ def logout():
 def get_users():
     """List all users."""
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     users = User.query.all()
     return render_template("users.html", users=users)
 
@@ -73,7 +73,7 @@ def get_users():
 def add_user():
     """Add a new User to the Database."""
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     roles = Role.query.all()
     if request.method == "POST":
         name = request.form.get("username")
@@ -117,7 +117,7 @@ def add_user():
 def edit_user(user_id):
     """Edit a given user."""
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     else:
         user = User.query.filter_by(id=user_id).first()
         if not user:
@@ -186,7 +186,7 @@ def edit_user(user_id):
 def delete_user(user_id):
     """Delete a given user."""
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     else:
         user = User.query.filter_by(id=user_id).first()
         if not user:
@@ -213,7 +213,7 @@ def delete_user(user_id):
 def get_roles():
     """List all roles."""
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     roles = Role.query.all()
     return render_template("roles.html", roles=roles)
 
@@ -223,7 +223,7 @@ def get_roles():
 def add_role():
     """Add a new role to the database."""
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     if request.method == "POST":
         name = request.form.get("rolename")
         if name is None:
@@ -251,7 +251,7 @@ def add_role():
 def edit_role(role_id):
     """Edit a given role."""
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     else:
         role = Role.query.filter_by(id=role_id).first()
         if not role:
@@ -283,7 +283,7 @@ def edit_role(role_id):
 @login_required
 def delete_role(role_id):
     if not current_user.superuser:
-        return abort(401)
+        return abort(403)
     else:
         role = Role.query.filter_by(id=role_id).first()
         if not role:

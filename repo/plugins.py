@@ -37,7 +37,7 @@ def upload(package):
 def upload_plugin():
     """Upload a zip compressed QGIS plugin."""
     if not current_user.superuser:
-        abort(401)
+        abort(403)
     if request.method == "POST":
         # Check if there is a file part
         if "file" not in request.files:
@@ -72,11 +72,11 @@ def upload_plugin():
 @login_required
 def delete_plugin(plugin_id):
     """Delete a give plugin."""
+    if not (current_user.superuser):
+        return abort(403)
     p = Plugin.query.get(plugin_id)
     if not p:
         return abort(404)
-    if not (current_user.superuser):
-        return abort(401)
     db.session.delete(p)
     db.session.commit()
     full_path = (
