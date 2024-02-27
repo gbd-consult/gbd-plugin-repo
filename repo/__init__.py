@@ -3,6 +3,7 @@ import logging
 import os
 
 from flask import Flask
+from flask_ldap3_login import LDAP3LoginManager
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
@@ -24,6 +25,7 @@ if __name__ != "__main__":
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
+ldap_manager = LDAP3LoginManager(app)
 
 rpc_handler = HTTPAuthXMLRPCHandler("rpc")
 rpc_handler.connect(app, "/rpc")

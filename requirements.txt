@@ -8,3 +8,4 @@ gunicorn
 packaging
 Flask-XML-RPC-RE
 Werkzeug==2.2.2
+flask_ldap3_login

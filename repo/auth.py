@@ -1,9 +1,10 @@
 """Authentication end points."""
 from flask import abort, flash, redirect, render_template, request, url_for
+from flask_ldap3_login import AuthenticationResponseStatus
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.urls import url_parse
 
-from repo import app, db, login_manager
+from repo import app, db, ldap_manager, login_manager
 from repo.models import Plugin, Role, User
 
 
@@ -29,17 +30,32 @@ def load_user(user_id):
     return User.query.filter_by(id=user_id).first()
 
 
+@ldap_manager.save_user
+def save_user(dn, username, data, memberships):
+    user = User.query.filter_by(name=data.get("cn")).first()
+    if not user:
+        user = User(name=data.get("cn"), superuser=False)
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log in the user."""
     if current_user.is_authenticated:
         return redirect(url_for("get_plugins"))
     if request.method == "POST":
-        user = User.query.filter_by(name=request.form.get("username")).first()
-        if user is None or not user.check_password(request.form.get("password")):
+        response = ldap_manager.authenticate(
+            request.form.get("username"), request.form.get("password"))
+        app.logger.info(response.status)
+        if response.status == AuthenticationResponseStatus.fail:
             flash("Invalid username or password")
             return redirect(url_for("login"))
 
+        user = save_user(
+            response.user_dn, response.user_dn,
+            response.user_info, response.user_groups)
         login_user(user)
 
         next_page = request.args.get("next")

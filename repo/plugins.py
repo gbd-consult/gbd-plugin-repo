@@ -80,10 +80,12 @@ def delete_plugin(plugin_id):
     db.session.delete(p)
     db.session.commit()
     full_path = (
-        Path(app.root_path) / Path(app.config["GBD_PLUGIN_PATH"]) / Path(p.file_name)
+        Path(app.root_path) / Path(app.config["GBD_PLUGIN_PATH"])
+        / Path(p.file_name)
     )
     full_path.unlink()
-    app.logger.info(f"PLUGIN_DELETED: {p.name}({p.id}) by user {current_user.name}")
+    app.logger.info(
+        f"PLUGIN_DELETED: {p.name}({p.id}) by user {current_user.name}")
     return redirect(url_for("get_plugins"))
 
 
@@ -113,8 +115,10 @@ def get_plugins():
         plugins = [
             p
             for p in plugins
-            if version.parse(p.qgisminimumversion) <= version.parse(version_arg)
-            and version.parse(p.qgismaximumversion) >= version.parse(version_arg)
+            if version.parse(
+                p.qgisminimumversion) <= version.parse(version_arg)
+            and version.parse(
+                p.qgismaximumversion) >= version.parse(version_arg)
         ]
 
     if request.path.endswith("plugins.xml"):
