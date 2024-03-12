@@ -36,7 +36,7 @@ def upload(package):
 @login_required
 def upload_plugin():
     """Upload a zip compressed QGIS plugin."""
-    if not current_user.superuser:
+    if not current_user.can_upload():
         abort(403)
     if request.method == "POST":
         # Check if there is a file part

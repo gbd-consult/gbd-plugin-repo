@@ -31,7 +31,7 @@ class Plugin(db.Model):
     update_date = db.Column(
         db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow
     )
-    public = db.Column(db.Boolean(), default=False)
+    public = db.Column(db.Boolean(), default=True)
     roles = db.relationship(
         "Role",
         secondary=plugin_role_permissions_association,
@@ -149,6 +149,10 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """Check the users password."""
         return check_password_hash(self.password_hash, password)
+
+    def can_upload(self):
+        """Check if can upload."""
+        return "upload" in [r.name for r in self.roles] or self.superuser
 
 
 class Role(db.Model):
