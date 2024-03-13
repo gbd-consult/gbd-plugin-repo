@@ -1,15 +1,24 @@
 {% extends "layout.html" %}
 {% block body %}
-        <form method="post" enctype="multipart/form-data">
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" name="username" class="form-control" aria-describedby="usernameHelp">
-            <small id="usernameHelp" class="form-text text-muted">Username eingeben</small>
-            <label for="password">Passwort</label>
-            <input type="password" name="password" class="form-control" aria-describedby="passwordHelp">
-            <small id="passwordHelp" class="form-text text-muted">Passwort eingeben</small>
-          </div>
-          <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-    </div>
+{% if config.DEMO_USER and config.DEMO_PASSWORD %}
+<p class="h4">Demoseite</p>
+<p>
+  Dies ist eine Demoseite. Die Zugangsdaten lauten wie folgt:
+</p>
+<pre>
+<code>{{config.DEMO_USER}}, Passwort: {{config.DEMO_PASSWORD}}</code>
+</pre>
+{% endif %}
+<form method="post" enctype="multipart/form-data">
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input type="text" name="username" class="form-control" aria-describedby="usernameHelp">
+    <small id="usernameHelp" class="form-text text-muted">Username eingeben</small>
+    <label for="password">Passwort</label>
+    <input type="password" name="password" class="form-control" aria-describedby="passwordHelp">
+    <small id="passwordHelp" class="form-text text-muted">Passwort eingeben</small>
+  </div>
+  <button type="submit" class="btn btn-primary">Login</button>
+</form>
+</div>
 {% endblock %}
