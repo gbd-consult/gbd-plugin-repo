@@ -237,3 +237,8 @@ def get_icon(filename):
         else:
             abort(403)
     abort(404)
+
+
+@app.route("/howto")
+def howto():
+    return render_template("howto.html")

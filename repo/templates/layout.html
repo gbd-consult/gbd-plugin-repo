@@ -30,6 +30,11 @@
         <li class="nav-item ">
           <a class="nav-link" href="/">Plugins</a>
         </li>
+        {% if config.APP_HOWTO %}
+        <li class="nav-item ">
+          <a class="nav-link" href="{{ url_for ('howto') }}">HowTo</a>
+        </li>
+        {% endif %}
         {% if current_user.is_authenticated and current_user.can_upload() %}
         <li class="nav-item">
           <a class="nav-link" href="/upload">Upload</a>

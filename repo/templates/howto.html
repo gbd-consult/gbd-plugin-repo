@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block body %}
+{% if config.DEMO_USER and config.DEMO_PASSWORD %}
+<p class="h4">Demoseite</p>
+<p>
+    Dies ist eine Demoseite. Die Zugangsdaten lauten wie folgt:
+</p>
+<pre>
+<code>{{config.DEMO_USER}}, Passwort: {{config.DEMO_PASSWORD}}</code>
+</pre>
+{% endif %}
+
+<p class="h4">QGIS Plugin Repository</p>
+<p>
+    Dieses Repository kann in QGIS mit folgender URL hinzugefügt werden:
+</p>
+<pre>
+<code>{{ url_for("get_plugins", _external=True) }}plugins.xml</code>
+</pre>
+<img src="{{ url_for('static', filename='images/howto_repo.png') }}" class="rounded mx-auto d-block"
+    style="width: 100%">
+
+<p class="h4">qgis-plugin-ci</p>
+<p>
+    Plugins können auch automatisiert z.B. mit <a href="https://opengisch.github.io/qgis-plugin-ci/">qgis-plugin-ci</a>
+    hochgeladen werden.
+    Wenn die Entwicklungsumgebung entsprechend konfiguriert ist, kann das Plugin mit dem folgenden Befehl hochgeladen
+    werden:
+</p>
+{% if config.DEMO_USER and config.DEMO_PASSWORD %}
+<pre><code>qgis-plugin-ci release --osgeo-username {{ config.DEMO_USER}} -c --osgeo-password {{ config.DEMO_PASSWORD }} --alternative-repo-url {{ url_for("rpc", _external=True) }} 0.1</code></pre>
+{% else %}
+<pre><code>qgis-plugin-ci release --osgeo-username myuser -c --osgeo-password mypassword --alternative-repo-url {{ url_for("rpc", _external=True) }} 0.1</code></pre>
+{% endif %}
+
+{% endblock body %}
