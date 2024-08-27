@@ -8,3 +8,4 @@ gunicorn
 packaging
 Flask-XML-RPC-RE
 Werkzeug==2.2.2
+sentry-sdk[flask]==2.13.0

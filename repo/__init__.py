@@ -8,6 +8,15 @@ from flask_sqlalchemy import SQLAlchemy
 
 from repo.rpc import HTTPAuthXMLRPCHandler
 
+if os.getenv("SENTRY_TELEMETRY", "0") == "1":
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn="https://3a467080a00c1ddccced9359f9a1b9c9@sentry.gbd-consult.de/2",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+    )
+
 app = Flask(__name__)
 if app.config["DEBUG"]:
     app.config.from_object("repo.config_dev")
