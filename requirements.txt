@@ -7,5 +7,5 @@ configparser
 gunicorn
 packaging
 Flask-XML-RPC-RE
-Werkzeug==2.3.8
+Werkzeug==3.0.3
 sentry-sdk[flask]==2.13.0
