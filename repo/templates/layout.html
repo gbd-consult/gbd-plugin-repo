@@ -11,7 +11,7 @@
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='theme/css/gpr.css')}}">
 
-  <title>GBD Plugin Repository</title>
+  <title>{{ config.APP_NAME }}</title>
 </head>
 
 <body>
@@ -19,7 +19,7 @@
     <a class="navbar-brand" href="/">
       <img src="{{ url_for('static', filename='theme/img/gbd-consult-logo.svg')}}" alt="GBD Consult" width="229"
         height="58" />
-      <span class="subline">GBD Plugin Repository</span>
+      <span class="subline">{{ config.APP_NAME }}</span>
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
       aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,10 +30,17 @@
         <li class="nav-item ">
           <a class="nav-link" href="/">Plugins</a>
         </li>
-        {% if current_user.is_authenticated and current_user.superuser %}
+        {% if config.APP_HOWTO %}
+        <li class="nav-item ">
+          <a class="nav-link" href="{{ url_for ('howto') }}">HowTo</a>
+        </li>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.can_upload() %}
         <li class="nav-item">
           <a class="nav-link" href="/upload">Upload</a>
         </li>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.superuser %}
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('get_users')}}">Users</a>
         </li>

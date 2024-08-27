@@ -15,3 +15,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "notasecret")
 SQLALCHEMY_DATABASE_URI = os.getenv(
     "SQLALCHEMY_DATABASE_URI", "sqlite:////data/plugin.db"
 )
+
+
+# Customization
+APP_NAME = os.getenv("APP_NAME", "GBD Plugin Repository")
+APP_HOWTO = os.getenv("APP_HOWTO", False)
+
+# DEMO
+DEMO_USER = os.getenv("DEMO_USER", False)
+DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", False)
