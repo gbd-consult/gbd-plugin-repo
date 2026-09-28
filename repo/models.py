@@ -1,14 +1,26 @@
 """Database Models."""
+
 from datetime import datetime
 
 from flask import url_for
 from flask_login import UserMixin
 from lxml import etree
+from packaging import version
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from repo import db
 
-DEFAULT_QGIS_MAXIMUM_VERSION = "4.99"
+
+def qgis_maximum_version_for(qgis_minimum_version):
+    """Return QGIS's implicit maximum version for a minimum version."""
+    return f"{version.parse(qgis_minimum_version).major}.99"
+
+
+def default_qgis_maximum_version(context):
+    """Provide the QGIS-compatible maximum version for direct model inserts."""
+    values = context.get_current_parameters()
+    return qgis_maximum_version_for(values["qgisminimumversion"])
+
 
 plugin_role_permissions_association = db.Table(
     "plugin_role",
@@ -49,7 +61,7 @@ class Plugin(db.Model):
     name = db.Column(db.String(120), nullable=False)
     qgisminimumversion = db.Column(db.String(10), nullable=False)
     qgismaximumversion = db.Column(
-        db.String(10), nullable=False, default=DEFAULT_QGIS_MAXIMUM_VERSION
+        db.String(10), nullable=False, default=default_qgis_maximum_version
     )
     description = db.Column(db.String(200), nullable=False)
     about = db.Column(db.String(), nullable=False)

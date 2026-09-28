@@ -1,22 +1,23 @@
 """Maintenance commands for existing plugin repository data."""
 
 from configparser import ConfigParser
+from configparser import Error as ConfigParserError
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
 import click
 
 from repo import app, db
-from repo.models import DEFAULT_QGIS_MAXIMUM_VERSION, Plugin
+from repo.models import Plugin, qgis_maximum_version_for
 
 
 def plugin_archive_path(plugin):
     """Return the on-disk path for a plugin archive."""
-    return Path(app.config["GBD_PLUGIN_PATH"]) / plugin.file_name
+    return Path(app.root_path) / Path(app.config["GBD_PLUGIN_PATH"]) / plugin.file_name
 
 
-def metadata_has_qgis_maximum_version(archive_path):
-    """Return whether an archive explicitly defines qgisMaximumVersion."""
+def qgis_versions_from_metadata(archive_path):
+    """Read QGIS compatibility versions from a plugin archive."""
     with ZipFile(archive_path) as archive:
         metadata_files = [
             member for member in archive.namelist() if member.endswith("metadata.txt")
@@ -28,36 +29,45 @@ def metadata_has_qgis_maximum_version(archive_path):
         with archive.open(metadata_files[0]) as metadata_file:
             metadata.read_file((line.decode() for line in metadata_file.readlines()))
 
-    return metadata.has_option("general", "qgisMaximumVersion")
+    minimum_version = metadata.get("general", "qgisMinimumVersion")
+    maximum_version = metadata.get("general", "qgisMaximumVersion", fallback="")
+    if not maximum_version:
+        maximum_version = qgis_maximum_version_for(minimum_version)
+
+    return minimum_version, maximum_version
 
 
-@click.command("update-qgis-maximum-versions")
+@click.command("sync-qgis-maximum-versions")
 @click.option("--dry-run", is_flag=True, help="Report changes without committing them.")
-def update_qgis_maximum_versions(dry_run):
-    """Update former implicit QGIS 3.99 maximum versions to 4.99."""
+def sync_qgis_maximum_versions(dry_run):
+    """Synchronize stored maximum versions with plugin archive metadata."""
     updated = 0
     skipped = 0
 
-    plugins = Plugin.query.filter_by(qgismaximumversion="3.99").all()
-    for plugin in plugins:
+    for plugin in Plugin.query.all():
         archive_path = plugin_archive_path(plugin)
         try:
-            has_explicit_maximum = metadata_has_qgis_maximum_version(archive_path)
-        except (BadZipFile, OSError, UnicodeDecodeError, ValueError) as error:
+            _, maximum_version = qgis_versions_from_metadata(archive_path)
+        except (
+            BadZipFile,
+            ConfigParserError,
+            OSError,
+            UnicodeDecodeError,
+            ValueError,
+        ) as error:
             skipped += 1
             click.echo(f"Skipping {plugin.file_name}: {error}")
             continue
 
-        if has_explicit_maximum:
-            skipped += 1
-            click.echo(f"Skipping {plugin.file_name}: explicit qgisMaximumVersion")
+        if plugin.qgismaximumversion == maximum_version:
             continue
 
+        old_maximum_version = plugin.qgismaximumversion
         if not dry_run:
-            plugin.qgismaximumversion = DEFAULT_QGIS_MAXIMUM_VERSION
+            plugin.qgismaximumversion = maximum_version
         updated += 1
         click.echo(
-            f"Updating {plugin.file_name}: 3.99 -> {DEFAULT_QGIS_MAXIMUM_VERSION}"
+            f"Updating {plugin.file_name}: {old_maximum_version} -> {maximum_version}"
         )
 
     if updated and not dry_run:
@@ -67,4 +77,4 @@ def update_qgis_maximum_versions(dry_run):
     click.echo(f"{action} {updated} plugin(s); skipped {skipped} plugin(s).")
 
 
-app.cli.add_command(update_qgis_maximum_versions)
+app.cli.add_command(sync_qgis_maximum_versions)

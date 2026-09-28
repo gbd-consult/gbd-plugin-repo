@@ -11,7 +11,7 @@ from sqlalchemy.sql import sqltypes
 
 from repo import app, db
 from repo.helpers import md5, readline_generator
-from repo.models import DEFAULT_QGIS_MAXIMUM_VERSION, Plugin, Tag, User
+from repo.models import Plugin, Tag, User, qgis_maximum_version_for
 
 
 def plugin_upload(user: User, package: io.BytesIO):
@@ -41,11 +41,14 @@ def plugin_upload(user: User, package: io.BytesIO):
         config.read_file(readline_generator(metadata))
 
         metadata_dict = dict(config.items("general"))
-        metadata_dict.setdefault("qgismaximumversion", DEFAULT_QGIS_MAXIMUM_VERSION)
+        metadata_dict.setdefault(
+            "qgismaximumversion",
+            qgis_maximum_version_for(metadata_dict.get("qgisminimumversion")),
+        )
         name = metadata_dict.get("name")
         plugin_version = metadata_dict.get("version")
 
-    except ConfigParserError:
+    except (ConfigParserError, TypeError, ValueError):
         return (False, "invalid metadata.txt file")
 
     # Set package_name

@@ -39,15 +39,16 @@ Enjoy! 🛰️
 
 ## QGIS maximum-version maintenance
 
-Plugins uploaded without a `qgisMaximumVersion` in their `metadata.txt` default
-to QGIS 4.99. To correct existing records that used the former implicit 3.99
-default, first run the maintenance command against a current backup with a dry
-run:
+QGIS interprets a missing `qgisMaximumVersion` as the end of the major release
+line declared by `qgisMinimumVersion`; for example, `3.4` implies `3.99`. The
+repository follows the same rule. To synchronize existing repository records
+with the metadata embedded in their plugin archives, first run the maintenance
+command against a current backup with a dry run:
 
 ```
-docker compose exec pluginrepo flask --app repo update-qgis-maximum-versions --dry-run
+docker compose exec pluginrepo flask --app repo sync-qgis-maximum-versions --dry-run
 ```
 
-After reviewing the output, run the same command without `--dry-run`. The
-command only updates archives that do not explicitly declare a maximum version;
-plugins declaring `qgisMaximumVersion=3.99` remain unchanged.
+After reviewing the output, run the same command without `--dry-run`. To make a
+QGIS 3 plugin eligible for QGIS 4, add `qgisMaximumVersion=4.99` to its own
+`metadata.txt`, test it under QGIS 4, package a new release, and upload it.
