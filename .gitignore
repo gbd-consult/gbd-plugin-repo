@@ -2,3 +2,5 @@ __pycache__
 *.db
 *.pyc/
 docker-compose.yml
+pluginrepo.tar
+data/
