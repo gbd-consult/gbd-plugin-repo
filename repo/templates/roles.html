@@ -29,10 +29,13 @@
               <i class="bi-person-fill-gear"></i>
               edit
             </a>
-            <a class="btn btn-sm btn-danger" href="{{ url_for('delete_role', role_id = role.id) }}">
-              <i class="bi-person-fill-x"></i>
-              delete
-            </a>
+            <form method="post" action="{{ url_for('delete_role', role_id=role.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-danger">
+                <i class="bi-person-fill-x"></i>
+                delete
+              </button>
+            </form>
           </div>
         </div>
       </td>

@@ -50,7 +50,8 @@ def login():
         return render_template("login.html")
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
+@login_required
 def logout():
     """Log out the user."""
     logout_user()
@@ -181,7 +182,7 @@ def edit_user(user_id):
             return render_template("user.html", user=user, roles=roles)
 
 
-@app.route("/user/<int:user_id>/delete")
+@app.route("/user/<int:user_id>/delete", methods=["POST"])
 @login_required
 def delete_user(user_id):
     """Delete a given user."""
@@ -279,7 +280,7 @@ def edit_role(role_id):
             return render_template("role.html", role=role)
 
 
-@app.route("/role/<int:role_id>/delete")
+@app.route("/role/<int:role_id>/delete", methods=["POST"])
 @login_required
 def delete_role(role_id):
     if not current_user.superuser:

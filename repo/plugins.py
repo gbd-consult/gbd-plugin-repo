@@ -68,7 +68,7 @@ def upload_plugin():
         return render_template("upload.html")
 
 
-@app.route("/plugins/<int:plugin_id>/delete")
+@app.route("/plugins/<int:plugin_id>/delete", methods=["POST"])
 @login_required
 def delete_plugin(plugin_id):
     """Delete a give plugin."""

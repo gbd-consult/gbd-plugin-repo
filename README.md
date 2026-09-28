@@ -36,3 +36,18 @@ docker-compose up --build
 Browse to localhost:8234
 
 Enjoy! 🛰️
+
+## QGIS maximum-version maintenance
+
+Plugins uploaded without a `qgisMaximumVersion` in their `metadata.txt` default
+to QGIS 4.99. To correct existing records that used the former implicit 3.99
+default, first run the maintenance command against a current backup with a dry
+run:
+
+```
+docker compose exec pluginrepo flask --app repo update-qgis-maximum-versions --dry-run
+```
+
+After reviewing the output, run the same command without `--dry-run`. The
+command only updates archives that do not explicitly declare a maximum version;
+plugins declaring `qgisMaximumVersion=3.99` remain unchanged.

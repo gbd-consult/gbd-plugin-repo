@@ -9,4 +9,4 @@ COPY ./repo /app/repo
 WORKDIR /app
 
 
-CMD ["gunicorn", "-b 0.0.0.0:4567", "repo:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:4567", "--timeout", "1800", "--workers", "3", "repo:app"]

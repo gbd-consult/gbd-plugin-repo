@@ -1,3 +1,4 @@
+from flask import abort, request
 from flask_login import login_required
 from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
 
@@ -7,7 +8,9 @@ class HTTPAuthXMLRPCHandler(XMLRPCHandler):
 
     @login_required
     def handle_request(self):
-        """Requires Login for all requests."""
+        """Require HTTP Basic authentication for XML-RPC requests."""
+        if request.authorization is None or request.authorization.type != "basic":
+            abort(401)
         return XMLRPCHandler.handle_request(self)
 
 

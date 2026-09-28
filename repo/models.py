@@ -8,6 +8,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from repo import db
 
+DEFAULT_QGIS_MAXIMUM_VERSION = "4.99"
+
 plugin_role_permissions_association = db.Table(
     "plugin_role",
     db.Column("plugin_id", db.Integer, db.ForeignKey("plugin.id"), primary_key=True),
@@ -46,7 +48,9 @@ class Plugin(db.Model):
     # values from metadata.txt
     name = db.Column(db.String(120), nullable=False)
     qgisminimumversion = db.Column(db.String(10), nullable=False)
-    qgismaximumversion = db.Column(db.String(10), nullable=False, default="3.99")
+    qgismaximumversion = db.Column(
+        db.String(10), nullable=False, default=DEFAULT_QGIS_MAXIMUM_VERSION
+    )
     description = db.Column(db.String(200), nullable=False)
     about = db.Column(db.String(), nullable=False)
     version = db.Column(db.String(10), nullable=False)

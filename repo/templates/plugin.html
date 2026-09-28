@@ -50,10 +50,13 @@
         <hr>
         <div class="row">
           <div class="col-md-6">
-            <a href="{{ url_for('delete_plugin', plugin_id = plugin.id)}}" class="btn btn-sm btn-danger">
-              <i class="bi-trash"></i>
-              Delete Plugin
-            </a>
+            <form method="post" action="{{ url_for('delete_plugin', plugin_id=plugin.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-danger">
+               <i class="bi-trash"></i>
+               Delete Plugin
+              </button>
+            </form>
           </div>
           <div class="col-md-6 text-right">
             <button class="btn btn-sm btn-warning" data-toggle="collapse" data-target="#collapse_{{plugin.id}}"
@@ -66,7 +69,8 @@
 
         <div class="collapse" id="collapse_{{plugin.id}}">
           <div class="card card-body">
-            <form method="post" enctype="multipart/form-data" action="{{url_for('edit_plugin', plugin_id=plugin.id)}}">
+             <form method="post" enctype="multipart/form-data" action="{{url_for('edit_plugin', plugin_id=plugin.id)}}">
+               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
               <p>If a plugin is set to "public" it is visible to all visitors</p>
               <div class="form-group">

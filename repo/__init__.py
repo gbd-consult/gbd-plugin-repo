@@ -5,6 +5,7 @@ import os
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 
 from repo.rpc import HTTPAuthXMLRPCHandler
 
@@ -31,13 +32,15 @@ if __name__ != "__main__":
 
 
 db = SQLAlchemy(app)
+csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 rpc_handler = HTTPAuthXMLRPCHandler("rpc")
 rpc_handler.connect(app, "/rpc")
+csrf.exempt(app.view_functions["rpc"])
 
-from repo import auth, models, plugins
+from repo import auth, maintenance, models, plugins
 # on a fresh DB run create_all
 from repo.helpers import create_superuser, db_is_populated
 

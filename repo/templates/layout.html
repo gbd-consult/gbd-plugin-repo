@@ -57,10 +57,13 @@
             {{ current_user.name }}
           </a>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="{{ url_for('logout') }}">
-              <i class="bi-door-closed-fill"></i>
-              Logout
-            </a>
+            <form method="post" action="{{ url_for('logout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="dropdown-item">
+                <i class="bi-door-closed-fill"></i>
+                Logout
+              </button>
+            </form>
           </div>
         </li>
         {% else %}
