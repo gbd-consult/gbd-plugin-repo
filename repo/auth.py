@@ -1,7 +1,9 @@
 """Authentication end points."""
+
+from urllib.parse import urlsplit
+
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
-from werkzeug.urls import url_parse
 
 from repo import app, db, login_manager
 from repo.models import Plugin, Role, User
@@ -43,7 +45,7 @@ def login():
         login_user(user)
 
         next_page = request.args.get("next")
-        if not next_page or url_parse(next_page).netloc != "":
+        if not next_page or urlsplit(next_page).netloc != "":
             next_page = url_for("get_plugins")
         return redirect(next_page)
     else:

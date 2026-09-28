@@ -23,6 +23,28 @@ def test_login_accepts_valid_csrf_token(client, login):
     assert response.headers["Location"].endswith("/")
 
 
+def test_login_rejects_external_redirect(client):
+    token = csrf_token(client, "/login")
+    response = client.post(
+        "/login?next=https://example.invalid/",
+        data={"username": "admin", "password": "password123", "csrf_token": token},
+    )
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/")
+
+
+def test_login_accepts_relative_redirect(client):
+    token = csrf_token(client, "/login")
+    response = client.post(
+        "/login?next=/upload",
+        data={"username": "admin", "password": "password123", "csrf_token": token},
+    )
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/upload")
+
+
 def test_logout_requires_post_and_csrf_token(client, login):
     login()
 
