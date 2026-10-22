@@ -79,13 +79,6 @@ QGIS fields such as `qgisMinimumVersion` are not required for QField.
 Project-specific QField plugins bundled with `.qgs`/`.qgz` projects are outside
 this catalogue's scope.
 
-Public QField ZIP links can be used with QField's **Install plugin from URL**.
-Private downloads still require authentication: the client must support
-sending the authorized user's credentials. A browser login does not log the
-QField application in. Phone/device access requires a reachable server URL;
-`127.0.0.1` only addresses the device itself. This implementation does not add
-an automatic QField community-repository feed.
-
 ### Localized metadata and existing installations
 
 Unqualified metadata values (for example `about`) supply the English text;
