@@ -52,3 +52,62 @@ docker compose exec pluginrepo flask --app repo sync-qgis-maximum-versions --dry
 After reviewing the output, run the same command without `--dry-run`. To make a
 QGIS 3 plugin eligible for QGIS 4, add `qgisMaximumVersion=4.99` to its own
 `metadata.txt`, test it under QGIS 4, package a new release, and upload it.
+
+
+## QGIS and QField catalogues
+
+The main menu provides **QGIS Plugins**, **QField Plugins**, and
+**Dokumentation**. QGIS keeps its existing `/`, `/plugins.xml`, XML-RPC,
+`/upload`, and download URLs. QField has its own `/qfield` catalogue,
+`/qfield/upload` form, download URLs and storage subdirectories. QField
+plugins are never included in the QGIS XML feed.
+
+Both catalogues use the existing user accounts and roles: superusers and
+users with the `upload` role can upload; only superusers can change visibility,
+assign roles or delete plugins. Public plugins are visible to everyone;
+private plugins require a superuser or a user with an assigned role. These
+checks also protect detail pages, icons and ZIP downloads. Updating a package
+preserves its visibility and role assignments.
+
+QField application plugin ZIPs must contain `main.qml` at the root. Although
+QField itself permits plugins without metadata, this catalogue requires a root
+`metadata.txt` with a `[general]` section containing `name`, `version`,
+`description`, and `author`. Optional fields include `about`, `email`,
+`homepage`, `repository`, `icon`, `tags`, and translated fields such as
+`about[de]`. Keep the ZIP filename stable across updates; increase `version`.
+QGIS fields such as `qgisMinimumVersion` are not required for QField.
+Project-specific QField plugins bundled with `.qgs`/`.qgz` projects are outside
+this catalogue's scope.
+
+Public QField ZIP links can be used with QField's **Install plugin from URL**.
+Private downloads still require authentication: the client must support
+sending the authorized user's credentials. A browser login does not log the
+QField application in. Phone/device access requires a reachable server URL;
+`127.0.0.1` only addresses the device itself. This implementation does not add
+an automatic QField community-repository feed.
+
+### Localized metadata and existing installations
+
+Unqualified metadata values (for example `about`) supply the English text;
+`about[de]`, `description[de]`, `changelog[de]`, and other localized text fields
+supply German text. The detail page offers **Deutsch / English** links and uses
+the browser language by default (German when unspecified). Missing translations
+fall back to the unqualified value. Text is escaped and multiline formatting is
+preserved. QGIS XML metadata retains its existing unqualified values.
+
+Startup adds a `plugin_details` table without changing the existing `plugin`
+table. Existing plugins remain QGIS entries. Back up the database and plugin
+files before upgrading. Metadata and translations are imported when a plugin
+package is uploaded. Upload validation distinguishes missing from duplicate
+metadata and reports missing required fields before writing files.
+
+### Documentation handoff
+
+
+
+### Tests
+
+```sh
+pip install -r requirements-dev.txt
+python -m pytest -q
+```

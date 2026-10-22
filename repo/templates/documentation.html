@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+<h1>Dokumentation</h1>
+<p>Hier entsteht die zentrale Dokumentation für unsere QGIS und QField Plugins.</p>
+<p>Bis dahin finden Sie Informationen zu den einzelnen Erweiterungen auf den jeweiligen Plugin-Seiten.</p>
+<div class="documentation-links">
+  <a class="btn btn-primary" href="{{ url_for('get_plugins') }}">QGIS Plugins</a>
+  <a class="btn btn-primary" href="{{ url_for('get_qfield_plugins') }}">QField Plugins</a>
+  <a class="btn btn-info" href="{{ url_for('howto') }}">Repository einrichten</a>
+</div>
+{% endblock %}

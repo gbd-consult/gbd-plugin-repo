@@ -6,6 +6,7 @@ from flask import url_for
 from flask_login import UserMixin
 from lxml import etree
 from packaging import version
+from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from repo import db
@@ -86,6 +87,34 @@ class Plugin(db.Model):
     hasprocessingprovider = db.Column(db.Boolean(), default=False)
     category = db.Column(db.String(20))
 
+    details = db.relationship(
+        "PluginDetails", uselist=False, cascade="all, delete-orphan", lazy="joined"
+    )
+
+    @property
+    def platform(self):
+        return self.details.platform if self.details else "qgis"
+
+    @classmethod
+    def for_platform(cls, platform):
+        # Existing records without details remain QGIS plugins.
+        return cls.query.outerjoin(PluginDetails).filter(
+            func.coalesce(PluginDetails.platform, "qgis") == platform
+        )
+
+    def localized(self, field, language="de"):
+        metadata = self.details.metadata_values if self.details else {}
+        return (
+            metadata.get(f"{field}[{language}]")
+            or getattr(self, field, "")
+            or metadata.get(field, "")
+            or ""
+        )
+
+    @property
+    def download_endpoint(self):
+        return "qfield_download" if self.platform == "qfield" else "download_plugin"
+
     def __repr__(self):
         """Show a Representation of the Plugin."""
         return (
@@ -141,6 +170,14 @@ user_role_association = db.Table(
     db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
     db.Column("role_id", db.Integer, db.ForeignKey("role.id"), primary_key=True),
 )
+
+
+class PluginDetails(db.Model):
+    """Additive metadata storage; preserves the existing plugin table and XML."""
+
+    plugin_id = db.Column(db.Integer, db.ForeignKey("plugin.id"), primary_key=True)
+    platform = db.Column(db.String(10), nullable=False, default="qgis")
+    metadata_values = db.Column(db.JSON, nullable=False, default=dict)
 
 
 class User(UserMixin, db.Model):

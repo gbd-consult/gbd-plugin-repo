@@ -4,20 +4,27 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="form-group">
     <p class="h4">
-      Plugin Upload
+      {{ 'QField' if platform == 'qfield' else 'QGIS' }} Plugin hochladen
     </p>
     <div class="custom-file">
       <input type="file" name="file" class="custom-file-input" id="pluginFile">
       <label class="custom-file-label" for="pluginFile">Datei wählen</label>
     </div>
     <small id="uploadHelp" class="form-text text-muted">Akzeptierte Dateiendungen: *.zip</small>
+    {% if platform == 'qfield' %}
+    <p class="upload-hint">Das ZIP muss main.qml und metadata.txt direkt auf der obersten Ebene enthalten.
+      Für den Katalog werden name, version, description und author in [general] benötigt.
+      Private Plugins benötigen auch beim Download eine Anmeldung mit passender Berechtigung.</p>
+    {% else %}
+    <p class="upload-hint">Das ZIP enthält den Plugin-Ordner mit metadata.txt.
+      Benötigt werden name, version, qgisMinimumVersion, description, about, author, email und repository.</p>
+    {% endif %}
   </div>
   <button type="submit" class="btn btn-primary">
     <i class="bi-upload"></i>
     Hochladen
   </button>
 </form>
-</div>
 {% endblock %}
 {% block script %}
 <script>

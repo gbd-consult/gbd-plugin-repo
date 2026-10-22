@@ -1,6 +1,5 @@
 """Maintenance commands for existing plugin repository data."""
 
-from configparser import ConfigParser
 from configparser import Error as ConfigParserError
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
@@ -8,29 +7,27 @@ from zipfile import BadZipFile, ZipFile
 import click
 
 from repo import app, db
+from repo.metadata import read_metadata
 from repo.models import Plugin, qgis_maximum_version_for
 
 
 def plugin_archive_path(plugin):
     """Return the on-disk path for a plugin archive."""
-    return Path(app.root_path) / Path(app.config["GBD_PLUGIN_PATH"]) / plugin.file_name
+    return (
+        Path(app.root_path)
+        / Path(app.config["GBD_PLUGIN_PATH"])
+        / ("qfield" if plugin.platform == "qfield" else "")
+        / plugin.file_name
+    )
 
 
 def qgis_versions_from_metadata(archive_path):
     """Read QGIS compatibility versions from a plugin archive."""
     with ZipFile(archive_path) as archive:
-        metadata_files = [
-            member for member in archive.namelist() if member.endswith("metadata.txt")
-        ]
-        if len(metadata_files) != 1:
-            raise ValueError("archive does not contain exactly one metadata.txt")
+        metadata, _, _ = read_metadata(archive)
 
-        metadata = ConfigParser()
-        with archive.open(metadata_files[0]) as metadata_file:
-            metadata.read_file((line.decode() for line in metadata_file.readlines()))
-
-    minimum_version = metadata.get("general", "qgisMinimumVersion")
-    maximum_version = metadata.get("general", "qgisMaximumVersion", fallback="")
+    minimum_version = metadata["qgisminimumversion"]
+    maximum_version = metadata.get("qgismaximumversion", "")
     if not maximum_version:
         maximum_version = qgis_maximum_version_for(minimum_version)
 
@@ -44,7 +41,7 @@ def sync_qgis_maximum_versions(dry_run):
     updated = 0
     skipped = 0
 
-    for plugin in Plugin.query.all():
+    for plugin in Plugin.for_platform("qgis").all():
         archive_path = plugin_archive_path(plugin)
         try:
             _, maximum_version = qgis_versions_from_metadata(archive_path)
@@ -54,6 +51,7 @@ def sync_qgis_maximum_versions(dry_run):
             OSError,
             UnicodeDecodeError,
             ValueError,
+            KeyError,
         ) as error:
             skipped += 1
             click.echo(f"Skipping {plugin.file_name}: {error}")

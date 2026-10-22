@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 
 <head>
   <!-- Required meta tags -->
@@ -28,16 +28,17 @@
     <div class="collapse navbar-collapse" id="navbarText">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item ">
-          <a class="nav-link" href="/">Plugins</a>
+          <a class="nav-link {{ 'active' if platform|default('') == 'qgis' else '' }}" href="{{ url_for('get_plugins', lang=metadata_language) }}">QGIS Plugins</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if platform|default('') == 'qfield' else '' }}" href="{{ url_for('get_qfield_plugins', lang=metadata_language) }}">QField Plugins</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if request.endpoint == 'documentation' else '' }}" href="{{ url_for('documentation') }}">Dokumentation</a>
         </li>
         {% if config.APP_HOWTO %}
         <li class="nav-item ">
           <a class="nav-link" href="{{ url_for ('howto') }}">HowTo</a>
-        </li>
-        {% endif %}
-        {% if current_user.is_authenticated and current_user.can_upload() %}
-        <li class="nav-item">
-          <a class="nav-link" href="/upload">Upload</a>
         </li>
         {% endif %}
         {% if current_user.is_authenticated and current_user.superuser %}
@@ -73,7 +74,6 @@
             Login
           </a>
         </li>
-        </span>
         {% endif %}
       </ul>
     </div>

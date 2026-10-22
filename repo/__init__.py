@@ -11,6 +11,7 @@ from repo.rpc import HTTPAuthXMLRPCHandler
 
 if os.getenv("SENTRY_TELEMETRY", "0") == "1":
     import sentry_sdk
+
     sentry_sdk.init(
         dsn="https://3a467080a00c1ddccced9359f9a1b9c9@sentry.gbd-consult.de/2",
         # Set traces_sample_rate to 1.0 to capture 100%
@@ -41,10 +42,14 @@ rpc_handler.connect(app, "/rpc")
 csrf.exempt(app.view_functions["rpc"])
 
 from repo import auth, maintenance, models, plugins
+
 # on a fresh DB run create_all
 from repo.helpers import create_superuser, db_is_populated
 
-if not db_is_populated():
+populated = db_is_populated()
+# Create additive tables for existing installations as well as fresh databases.
+db.create_all()
+if not populated:
     print("no database found, generating new one")
     if not os.path.isdir(app.config["GBD_PLUGIN_PATH"]):
         os.makedirs(app.config["GBD_PLUGIN_PATH"])

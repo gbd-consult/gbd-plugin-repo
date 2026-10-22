@@ -1,21 +1,47 @@
 {% extends "layout.html" %}
 {% block body %}
+<div class="section-heading">
+  <a href="{{ url_for('get_qfield_plugins' if platform == 'qfield' else 'get_plugins', lang=metadata_language) }}">&larr; {{ 'QField' if platform == 'qfield' else 'QGIS' }} Plugins</a>
+  <nav aria-label="Sprache der Plugin-Metadaten" class="metadata-languages">
+    <a href="{{ url_for('get_plugin', plugin_id=plugin.id, lang='de') }}" lang="de" {{ 'aria-current=page' if metadata_language == 'de' else '' }}>Deutsch</a>
+    <a href="{{ url_for('get_plugin', plugin_id=plugin.id, lang='en') }}" lang="en" {{ 'aria-current=page' if metadata_language == 'en' else '' }}>English</a>
+  </nav>
+</div>
 <div class="card">
   <div class="row g-0">
     <div class="col-md-3">
-      <img src="{{ plugin.icon }}" class="rounded mx-auto d-block">
+      {% if plugin.icon %}<img src="{{ plugin.icon }}" alt="" class="rounded mx-auto d-block">{% endif %}
     </div>
     <div class="col-md-9">
       <div class="card-body">
-        <h5 class="card-title">{{ plugin.name }}</h5>
-        <p class="card-text font-weight-bold">{{ plugin.description }}</p>
+        <h1 class="card-title">{{ plugin.localized('name', metadata_language) }}</h1>
+        <p class="card-text font-weight-bold" lang="{{ metadata_language }}">{{ plugin.localized('description', metadata_language) }}</p>
         <hr />
-        {% if plugin.about %}
-        <p class="card-text">{{ plugin.about }}</p>
+        {% if plugin.localized('about', metadata_language) %}
+        <p class="card-text metadata-text" lang="{{ metadata_language }}">{{ plugin.localized('about', metadata_language) }}</p>
         {% endif %}
         <hr />
         <table class="table table-borderless table-sm">
           <tbody>
+            <tr>
+              <td>Autor</td>
+              <td>{{ plugin.localized('author', metadata_language) }}</td>
+            </tr>
+            {% if plugin.email %}
+            <tr><td>E-Mail</td><td>{{ plugin.email }}</td></tr>
+            {% endif %}
+            {% if platform == 'qgis' %}
+            <tr><td>QGIS-Version</td><td>{{ plugin.qgisminimumversion }} &ndash; {{ plugin.qgismaximumversion }}</td></tr>
+            {% endif %}
+            {% if plugin.category %}
+            <tr><td>Kategorie</td><td>{{ plugin.localized('category', metadata_language) }}</td></tr>
+            {% endif %}
+            {% if plugin.localized('license', metadata_language) %}
+            <tr><td>Lizenz</td><td>{{ plugin.localized('license', metadata_language) }}</td></tr>
+            {% endif %}
+            {% if plugin.tags %}
+            <tr><td>Tags</td><td>{{ plugin.tags|join(', ') }}</td></tr>
+            {% endif %}
             <tr>
               <td>Version</td>
               <td>{{ plugin.version }}</td>
@@ -38,12 +64,32 @@
               Repository
             </a>
             {% endif %}
-            <a href="{{ url_for('download_plugin', filename=plugin.file_name) }}" class="btn btn-primary">
+            {% if plugin.homepage %}
+            <a href="{{ plugin.homepage }}" class="btn btn-info">Homepage</a>
+            {% endif %}
+            {% if plugin.tracker %}
+            <a href="{{ plugin.tracker }}" class="btn btn-info">Fehler melden</a>
+            {% endif %}
+            <a href="{{ url_for(plugin.download_endpoint, filename=plugin.file_name) }}" class="btn btn-primary">
               <i class="bi-download"></i>
               Download
             </a>
           </div>
         </div>
+
+        {% if plugin.localized('changelog', metadata_language) %}
+        <h2>Änderungen</h2>
+        <p class="metadata-text" lang="{{ metadata_language }}">{{ plugin.localized('changelog', metadata_language) }}</p>
+        {% endif %}
+        {% if platform == 'qfield' %}
+        <h2>Installation in QField</h2>
+        <p>In QField unter Einstellungen &rarr; Plugins die Option „Plugin von URL installieren“ wählen und den folgenden Link verwenden.</p>
+        <label for="install-url">Download-Link</label>
+        <input id="install-url" class="form-control" type="text" readonly value="{{ url_for(plugin.download_endpoint, filename=plugin.file_name, _external=True) }}">
+        {% if not plugin.public %}
+        <p class="upload-hint">Dieses Plugin ist privat. Der Download benötigt eine berechtigte Anmeldung. Falls QField diese nicht unterstützt, das ZIP mit einem berechtigten Konto im Browser herunterladen und manuell übertragen.</p>
+        {% endif %}
+        {% endif %}
 
 
         {% if user.superuser %}

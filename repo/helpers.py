@@ -3,6 +3,7 @@ import hashlib
 
 from sqlalchemy.exc import OperationalError
 
+from repo import db
 from repo.models import Plugin, User
 
 
@@ -17,7 +18,8 @@ def readline_generator(fp):
 def db_is_populated():
     """Check if our database is already populated."""
     try:
-        Plugin.query.all()
+        # Inspect the legacy table without joining newly introduced tables.
+        db.session.query(Plugin.id).first()
         return True
     except OperationalError:
         return False

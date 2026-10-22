@@ -2,8 +2,16 @@
 import io
 from pathlib import Path
 
-from flask import (Response, abort, flash, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import (
+    Response,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
 from lxml import etree
 from packaging import version
@@ -33,39 +41,48 @@ def upload(package):
 
 
 @app.route("/upload", methods=["GET", "POST"])
+@app.route(
+    "/qfield/upload",
+    methods=["GET", "POST"],
+    endpoint="qfield_upload",
+    defaults={"platform": "qfield"},
+)
 @login_required
-def upload_plugin():
+def upload_plugin(platform="qgis"):
     """Upload a zip compressed QGIS plugin."""
     if not current_user.can_upload():
         abort(403)
+    upload_endpoint = "qfield_upload" if platform == "qfield" else "upload_plugin"
     if request.method == "POST":
         # Check if there is a file part
         if "file" not in request.files:
             flash("no file part")
             app.logger.info(request.files)
-            return redirect(url_for("upload_plugin"))
+            return redirect(url_for(upload_endpoint))
         file = request.files["file"]
 
         # check if the filename is emtpy
         if file.filename == "":
             flash("no selected file")
-            return redirect(url_for("upload_plugin"))
+            return redirect(url_for(upload_endpoint))
 
         # Check filetype
         if not file.filename.endswith(".zip"):
             flash("wrong filetype")
-            return redirect(url_for("upload_plugin"))
+            return redirect(url_for(upload_endpoint))
 
         package_file = io.BytesIO(file.read())
-        success, result = plugin_upload(current_user, package_file)
+        success, result = plugin_upload(
+            current_user, package_file, platform, file.filename
+        )
 
         if success:
             flash(f"uploaded {file.filename}")
         else:
             flash(result)
-        return redirect(url_for("upload_plugin"))
+        return redirect(url_for(upload_endpoint))
     else:
-        return render_template("upload.html")
+        return render_template("upload.html", platform=platform)
 
 
 @app.route("/plugins/<int:plugin_id>/delete", methods=["POST"])
@@ -77,27 +94,35 @@ def delete_plugin(plugin_id):
     p = Plugin.query.get(plugin_id)
     if not p:
         return abort(404)
+    platform = p.platform
     db.session.delete(p)
     db.session.commit()
     full_path = (
-        Path(app.root_path) / Path(app.config["GBD_PLUGIN_PATH"]) / Path(p.file_name)
+        Path(app.root_path)
+        / Path(app.config["GBD_PLUGIN_PATH"])
+        / ("qfield" if platform == "qfield" else "")
+        / Path(p.file_name)
     )
-    full_path.unlink()
+    full_path.unlink(missing_ok=True)
     app.logger.info(f"PLUGIN_DELETED: {p.name}({p.id}) by user {current_user.name}")
-    return redirect(url_for("get_plugins"))
+    return redirect(
+        url_for("get_qfield_plugins" if platform == "qfield" else "get_plugins")
+    )
 
 
 @app.route("/plugins.xml")
 @app.route("/")
-def get_plugins():
+@app.route("/qfield", endpoint="get_qfield_plugins", defaults={"platform": "qfield"})
+def get_plugins(platform="qgis"):
     """Generate the 'plugins.xml' and html view from the DB."""
     if current_user.is_anonymous:
-        plugins = Plugin.query.filter_by(public=True).all()
+        plugins = Plugin.for_platform(platform).filter(Plugin.public.is_(True)).all()
     elif current_user.superuser:
-        plugins = Plugin.query.all()
+        plugins = Plugin.for_platform(platform).all()
     else:
         plugins = (
-            Plugin.query.join(Plugin.roles, isouter=True)
+            Plugin.for_platform(platform)
+            .join(Plugin.roles, isouter=True)
             .join(Role.users, isouter=True)
             .filter(
                 or_(
@@ -108,7 +133,7 @@ def get_plugins():
             .all()
         )
 
-    if request.args.get("qgis"):
+    if platform == "qgis" and request.args.get("qgis"):
         version_arg = request.args.get("qgis")
         plugins = [
             p
@@ -127,7 +152,11 @@ def get_plugins():
     else:
         roles = Role.query.all()
         return render_template(
-            "plugins.html", plugins=plugins, user=current_user, roles=roles
+            "plugins.html",
+            plugins=plugins,
+            user=current_user,
+            roles=roles,
+            platform=platform,
         )
 
 
@@ -138,7 +167,11 @@ def get_plugin(plugin_id):
     if plugin:
         if plugin.has_access(current_user):
             return render_template(
-                "plugin.html", plugin=plugin, user=current_user, roles=roles
+                "plugin.html",
+                plugin=plugin,
+                user=current_user,
+                roles=roles,
+                platform=plugin.platform,
             )
         else:
             abort(403)
@@ -212,9 +245,16 @@ def edit_plugin(plugin_id):
 
 
 @app.route("/download/<string:filename>")
-def download_plugin(filename):
-    plugin = Plugin.query.filter(Plugin.file_name == filename).first()
+@app.route(
+    "/qfield/download/<string:filename>",
+    endpoint="qfield_download",
+    defaults={"platform": "qfield"},
+)
+def download_plugin(filename, platform="qgis"):
+    plugin = Plugin.for_platform(platform).filter(Plugin.file_name == filename).first()
     full_path = Path(app.root_path) / app.config["GBD_PLUGIN_PATH"]
+    if platform == "qfield":
+        full_path /= "qfield"
 
     if plugin:
         if plugin.has_access(current_user):
@@ -228,11 +268,18 @@ def download_plugin(filename):
 
 
 @app.route("/icons/<string:filename>")
-def get_icon(filename):
-    plugin = Plugin.query.filter(Plugin.icon == request.path).first()
+@app.route(
+    "/qfield/icons/<string:filename>",
+    endpoint="qfield_icon",
+    defaults={"platform": "qfield"},
+)
+def get_icon(filename, platform="qgis"):
+    plugin = Plugin.for_platform(platform).filter(Plugin.icon == request.path).first()
     if plugin:
         if plugin.has_access(current_user):
             full_path = Path(app.root_path) / app.config["GBD_ICON_PATH"]
+            if platform == "qfield":
+                full_path /= "qfield"
             return send_from_directory(full_path, filename)
         else:
             abort(403)
@@ -242,3 +289,18 @@ def get_icon(filename):
 @app.route("/howto")
 def howto():
     return render_template("howto.html")
+
+
+@app.route("/documentation")
+def documentation():
+    if app.config.get("DOCUMENTATION_URL"):
+        return redirect(app.config["DOCUMENTATION_URL"])
+    return render_template("documentation.html")
+
+
+@app.context_processor
+def metadata_language():
+    language = request.args.get("lang")
+    if language not in {"en", "de"}:
+        language = request.accept_languages.best_match(["de", "en"], default="de")
+    return {"metadata_language": language}

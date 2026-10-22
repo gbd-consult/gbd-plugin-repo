@@ -1,5 +1,14 @@
 {% extends "layout.html" %}
 {% block body %}
+<div class="section-heading">
+  <h1>{{ 'QField' if platform == 'qfield' else 'QGIS' }} Plugins</h1>
+  {% if user.is_authenticated and user.can_upload() %}
+  <a class="btn btn-primary" href="{{ url_for('qfield_upload' if platform == 'qfield' else 'upload_plugin') }}">Plugin hochladen</a>
+  {% endif %}
+</div>
+{% if platform == 'qfield' %}
+<p class="section-intro">Erweiterungen für QField. Hinweise zur Installation finden Sie auf der jeweiligen Plugin-Seite.</p>
+{% endif %}
 {% if plugins %}
 <table class="table plugins">
   <thead>
@@ -14,7 +23,7 @@
   <tbody>
     {% for plugin in plugins %}
     <tr>
-      <td><a href="{{ url_for('get_plugin',plugin_id=plugin.id)}}">{{ plugin.name }}</a></td>
+      <td><a href="{{ url_for('get_plugin',plugin_id=plugin.id, lang=metadata_language)}}">{{ plugin.localized('name', metadata_language) }}</a></td>
       <td>{{ plugin.user.name }}</td>
       <td>{{ plugin.version }}</td>
       <td>{{ plugin.update_date.strftime('%d.%m.%Y') }}</td>
@@ -24,16 +33,10 @@
   </tbody>
 </table>
 {% else %}
-<p>There are no plugins here. Nothing but empty space.</p>
+<p>Hier sind noch keine {{ 'QField' if platform == 'qfield' else 'QGIS' }} Plugins vorhanden.</p>
 <div class="text-center">
   <i class="bi-rocket-takeoff" style="font-size: 5rem"></i>
   <p></p>
-  {% if user.superuser %}
-  <a href="{{ url_for('upload_plugin') }}" class="btn btn-info">
-    <i class="bi-upload"></i>
-    Upload a Plugin
-  </a>
-  {% endif %}
 </div>
 {% endif %}
 {% endblock %}
