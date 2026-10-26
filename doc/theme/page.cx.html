@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de" data-static="<% options.webRoot %>/_static">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><% options.title %> - <% options.subTitle %></title>
+    <link rel="stylesheet" href="<% options.webRoot %>/_static/theme.css">
+    <script src="<% options.webRoot %>/_static/_dog.js"></script>
+    <script src="<% options.webRoot %>/_static/theme.js"></script>
+</head>
+
+<body>
+    <button type="button" id="sidebar_toggle" aria-label="Navigation ein-/ausblenden"></button>
+
+    <aside>
+        <div id="sidebar">
+            <a id="sidebar_header" href="<% home %>">
+                %if options.brandLogo
+                    <span id="sidebar_logo">
+                        <img src="<% options.webRoot %>/_static/<% options.brandLogo %>" alt="<% options.brandName | html%>">
+                    </span>
+                %end
+                <span id="sidebar_header_title"><% options.title | html %></span>
+                <span id="sidebar_header_subtitle"><% options.subTitle | html %></span>
+            </a>
+            <div id="sidebar_content">
+                <div id="sidebar_toc"></div>
+            </div>
+            <div id="sidebar_footer">
+                <% options.brandFooter %>
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <nav>
+            <div id="nav_breadcrumbs">
+                %for url, title in breadcrumbs index i length total
+                    %if i == 1
+                        %continue
+                    %end
+                    %if i > 2
+                        <span>&raquo;</span>
+                    %end
+                    %if i < total
+                        <span><a href="<% url %>"><% title %></a></span>
+                    %else
+                        <span><% title %></span>                    
+                    %end
+                %end
+            </div>
+            <div id="nav_flex"></div>
+            <div id="search">
+                <div id="search_box">
+                    <input type="search" autocomplete="off" aria-label="Suche">
+                    <button type="button" aria-label="Suche zurücksetzen"></button>
+                </div>
+                <div id="search_results"></div>
+            </div>
+        </nav>
+        <% main %>
+        <footer id="page_nav">
+            <a class="nav_link" id="nav_arrow_prev"><span class="nav_icon"></span><span class="nav_title"></span></a>
+            <a class="nav_link" id="nav_arrow_next"><span class="nav_title"></span><span class="nav_icon"></span></a>
+        </footer>
+    </main>
+</body>
+</html>

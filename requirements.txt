@@ -10,3 +10,6 @@ packaging
 Flask-XML-RPC-RE
 Werkzeug==3.0.6
 sentry-sdk[flask]==2.13.0
+mistune==2.0.5
+pygments
+watchdog

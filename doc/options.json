@@ -1,0 +1,41 @@
+{
+  "docRoots": ["./content"],
+  "outputDir": "./html/doc",
+  "webRoot": "/doc",
+  "docPatterns": ["*.doc.md"],
+  "assetPatterns": ["*.svg", "*.png"],
+  "excludeRegex": "vendor",
+
+  "debug": false,
+
+  "fileSplitLevel": {
+    "/": 3
+  },
+  "pageTemplate": "./theme/page.cx.html",
+  "staticDir": "_static",
+  "extraAssets": [
+    "./theme/theme.css",
+    "./theme/theme.js",
+    "./theme/gws_logo.svg"
+  ],
+
+  "brandLogo": "gws_logo.svg",
+  "brandName": "Geoinformatikbüro Dassau GmbH",
+  "brandFooter": "&copy; Geoinformatikbüro Dassau GmbH 2006-2026",
+
+  "serverPort": 5500,
+  "serverHost": "0.0.0.0",
+
+  "title": "Dokumentation Titel",
+  "subTitle": "Untertitel",
+
+  "pdfOptions": {
+    "margin-bottom": 20,
+    "margin-left": 20,
+    "margin-right": 20,
+    "margin-top": 20,
+    "footer-font-size": 7,
+    "footer-right": "[page]",
+    "footer-spacing": 5
+  }
+}

@@ -4,3 +4,4 @@ __pycache__
 docker-compose.yml
 pluginrepo.tar
 data/
+doc/html
