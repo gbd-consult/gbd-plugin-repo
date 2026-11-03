@@ -267,8 +267,8 @@ def test_private_qfield_visibility_edit_and_delete(client, login):
     assert not (Path(app.config["GBD_PLUGIN_PATH"]) / "qfield" / filename).exists()
 
 
-def test_documentation_placeholder_and_configured_target(client, monkeypatch):
-    assert b"Dokumentation" in client.get("/documentation").data
+def test_documentation_entry_and_configured_target(client, monkeypatch):
+    assert client.get("/documentation").location == "/doc/"
     monkeypatch.setitem(
         app.config, "DOCUMENTATION_URL", "https://docs.example.invalid/"
     )

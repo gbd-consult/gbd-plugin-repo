@@ -21,6 +21,10 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
 APP_NAME = os.getenv("APP_NAME", "GBD Plugin Repository")
 APP_HOWTO = os.getenv("APP_HOWTO", False)
 DOCUMENTATION_URL = os.getenv("DOCUMENTATION_URL", "")
+DOCUMENTATION_PATH = os.getenv(
+    "DOCUMENTATION_PATH",
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "doc", "html", "doc"),
+)
 
 # DEMO
 DEMO_USER = os.getenv("DEMO_USER", False)

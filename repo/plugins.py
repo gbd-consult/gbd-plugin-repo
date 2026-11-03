@@ -295,7 +295,31 @@ def howto():
 def documentation():
     if app.config.get("DOCUMENTATION_URL"):
         return redirect(app.config["DOCUMENTATION_URL"])
-    return render_template("documentation.html")
+    return redirect(url_for("documentation_page"))
+
+
+@app.route("/doc/", defaults={"filename": "index.html"})
+@app.route("/doc/<path:filename>")
+def documentation_page(filename):
+    """Serve standalone Dog pages and their images, navigation and search index."""
+    for platform in ("qgis", "qfield"):
+        old_prefix = f"{platform}/geoservices/"
+        if filename.startswith(old_prefix):
+            return redirect(
+                url_for(
+                    "documentation_page",
+                    filename=f"{platform}-geoservices-de/"
+                    + filename[len(old_prefix) :],
+                ),
+                code=301,
+            )
+        if filename == f"{platform}/index.html":
+            return redirect(url_for("documentation_page"), code=301)
+    directory = (
+        app.config.get("DOCUMENTATION_PATH")
+        or Path(app.root_path).parent / "doc/html/doc"
+    )
+    return send_from_directory(directory, filename)
 
 
 @app.context_processor

@@ -94,9 +94,17 @@ files before upgrading. Metadata and translations are imported when a plugin
 package is uploaded. Upload validation distinguishes missing from duplicate
 metadata and reports missing required fields before writing files.
 
-### Documentation handoff
+### Documentation
 
+The **Dokumentation** menu opens the standalone Dog handbooks at `/doc/`,
+organized into QGIS and QField plugins. Build them after editing the sources:
 
+```sh
+python3 doc/doc.py build
+```
+
+Docker builds the documentation automatically. See [doc/README.md](doc/README.md)
+for handbook structure, translations and local preview.
 
 ### Tests
 
